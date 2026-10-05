@@ -1,21 +1,44 @@
 package com.example.authservice.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.authservice.dto.AuthResponse;
+import com.example.authservice.dto.LoginRequest;
+import com.example.authservice.dto.RegisterRequest;
+import com.example.authservice.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
+    private final AuthService authService;
+
     @GetMapping("/status")
-    public String status() {
-        return "Auth Service is running";
+    public ResponseEntity<String> status() {
+        return ResponseEntity.ok("Auth Service is healthy");
     }
 
     @PostMapping("/login")
-    public String login() {
-        return "Login successful";
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            AuthResponse response = authService.login(loginRequest);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse(null, null, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
+        try {
+            String result = authService.register(registerRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }
+
