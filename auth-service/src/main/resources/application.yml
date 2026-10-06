@@ -1,24 +1,5 @@
-server:
-  port: 8081
-
 spring:
   application:
     name: auth-service
-  datasource:
-    url: jdbc:mysql://localhost:3306/auth_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    username: root
-    password: 123456
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
-jwt:
-  # Secret key MUST be at least 256 bits (32 characters) for HS256
-  secret: c3VwZXItc2VjcmV0LWtleS10aGF0LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHM=
-  # Expiration time in milliseconds (e.g. 86400000 = 1 day)
-  expiration: 86400000
+  config:
+    import: optional:configserver:http://localhost:8888
