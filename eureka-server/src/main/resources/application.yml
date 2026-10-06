@@ -1,10 +1,13 @@
+server:
+  port: 8761
+
 spring:
   application:
-    name: auth-service
-  config:
-    import: optional:configserver:http://localhost:8888
+    name: eureka-server
 
 eureka:
   client:
+    register-with-eureka: false
+    fetch-registry: false
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
