@@ -16,6 +16,12 @@ public class ProductController {
 
     private final ProductService productService;
 
+    @GetMapping("/check-auth")
+    public ResponseEntity<String> checkAuth() {
+        String result = productService.checkAuthServiceStatus();
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
@@ -34,4 +40,5 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }
+
 
