@@ -5,11 +5,13 @@ import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.RegisterRequest;
 import com.example.authservice.entity.User;
 import com.example.authservice.repository.UserRepository;
+import com.example.authservice.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,15 +19,18 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
 
     public AuthResponse login(LoginRequest request) {
-        Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
+        // This will authenticate against CustomUserDetailsService
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
         
-        if (userOpt.isPresent() && passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
-            // In a real app, generate a JWT token here
-            return new AuthResponse("mock-jwt-token-for-" + request.getUsername(), "Bearer", "Login successful");
-        }
-        throw new RuntimeException("Invalid username or password");
+        // If authentication passes, generate token
+        String token = jwtUtils.generateToken(authentication.getName());
+        return new AuthResponse(token, "Bearer", "Login successful");
     }
 
     public String register(RegisterRequest request) {
