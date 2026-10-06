@@ -6,6 +6,7 @@ import com.example.authservice.dto.RegisterRequest;
 import com.example.authservice.entity.User;
 import com.example.authservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,11 +16,12 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthResponse login(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
         
-        if (userOpt.isPresent() && userOpt.get().getPassword().equals(request.getPassword())) {
+        if (userOpt.isPresent() && passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
             // In a real app, generate a JWT token here
             return new AuthResponse("mock-jwt-token-for-" + request.getUsername(), "Bearer", "Login successful");
         }
@@ -33,7 +35,7 @@ public class AuthService {
         
         User user = User.builder()
                 .username(request.getUsername())
-                .password(request.getPassword()) // In a real app, hash this password!
+                .password(passwordEncoder.encode(request.getPassword())) // Hash the password!
                 .email(request.getEmail())
                 .role("USER")
                 .build();
@@ -42,3 +44,4 @@ public class AuthService {
         return "User registered successfully";
     }
 }
+
