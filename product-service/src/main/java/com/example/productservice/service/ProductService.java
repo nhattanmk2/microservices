@@ -3,10 +3,9 @@ package com.example.productservice.service;
 import com.example.productservice.dto.ProductDTO;
 import com.example.productservice.entity.Product;
 import com.example.productservice.repository.ProductRepository;
+import com.example.productservice.client.AuthClient;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,14 +16,13 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final RestTemplate restTemplate;
+    private final AuthClient authClient;
 
     public String checkAuthServiceStatus() {
-        String authUrl = "http://localhost:8081/api/auth/status";
         try {
-            // Send a GET request to auth-service
-            ResponseEntity<String> response = restTemplate.getForEntity(authUrl, String.class);
-            return "Phản hồi từ Auth Service: " + response.getBody();
+            // Send a GET request to auth-service using Feign
+            String response = authClient.getAuthStatus();
+            return "Phản hồi từ Auth Service (thông qua Feign): " + response;
         } catch (Exception e) {
             // Handle timeout or connection refused
             return "Lỗi! Không thể kết nối tới Auth Service. Chi tiết: " + e.getMessage();
