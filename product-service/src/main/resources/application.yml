@@ -16,3 +16,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+jwt:
+  # Secret key MUST be exactly the same as in Auth-Service to decode the token!
+  secret: c3VwZXItc2VjcmV0LWtleS10aGF0LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHM=
+  expiration: 86400000
