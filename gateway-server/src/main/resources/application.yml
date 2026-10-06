@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-server
+
+# ---- Kết nối Eureka ----
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true          # BẮT BUỘC: để Zuul lấy được danh sách service
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+
+# ---- Cấu hình routing ----
+zuul:
+  ignored-services: '*'                 # Tắt route tự động, chỉ cho phép các route khai báo dưới đây
+  sensitive-headers: Cookie,Set-Cookie  # KHÔNG chặn header Authorization (để JWT đi qua)
+  routes:
+    auth-service:
+      path: /api/auth/**
+      service-id: auth-service          # Tên đăng ký trên Eureka
+      strip-prefix: false               # Giữ nguyên /api/auth/... khi chuyển tiếp
+    product-service:
+      path: /api/products/**
+      service-id: product-service
+      strip-prefix: false
+
+# ---- Timeout (Ribbon + Hystrix đi kèm Zuul) ----
+ribbon:
+  ConnectTimeout: 3000
+  ReadTimeout: 10000
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 15000
+
+# ---- Actuator: xem bảng route ----
+management:
+  endpoints:
+    web:
+      exposure:
+        include: routes,filters,health
