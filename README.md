@@ -1,75 +1,111 @@
-# Hệ Thống Microservices Quản Lý Sản Phẩm (Tuần 1)
+# 🛒 Hệ thống Microservices E-Commerce Cơ bản
 
-Dự án này là kết quả thực hành xây dựng hệ thống **Microservices Backend** bằng Java Spring Boot trong 7 ngày đầu tiên. Hệ thống áp dụng kiến trúc cơ bản với giao tiếp HTTP nội bộ và bảo mật hoàn chỉnh bằng JWT.
+Dự án mô phỏng hệ thống thương mại điện tử sử dụng kiến trúc Microservices, xây dựng trên nền tảng Spring Boot & Spring Cloud. 
 
-## 🛠 Công nghệ sử dụng
-- **Java 17**
-- **Spring Boot 2.7.18** (Spring Web, Spring Data JPA, Spring Security)
-- **MySQL 8** (Lưu trữ dữ liệu riêng rẽ cho từng service)
-- **JJWT** (Sinh và kiểm chứng Token JSON Web Token)
+## 1. Công nghệ sử dụng
+- **Java**: 11 / 17
+- **Framework chính**: Spring Boot 2.7.18
+- **Microservices Stack**: Spring Cloud 2021.0.8 (Riêng Gateway dùng Boot 2.3.12 / Hoxton.SR12)
+  - **Netflix Eureka**: Đăng ký và khám phá dịch vụ (Service Registry)
+  - **Netflix Zuul**: Cổng điều hướng tập trung (API Gateway)
+  - **OpenFeign**: Giao tiếp nội bộ giữa các service
+  - **Spring Cloud Config**: Quản lý cấu hình tập trung lưu trữ trên GitHub
+- **Cơ sở dữ liệu**: MySQL 8.0 & Spring Data JPA
+- **Bảo mật**: Spring Security & JWT (JSON Web Token)
+- **Kiểm thử**: JUnit 5 & Mockito
 
-## 🏗 Kiến trúc hệ thống
-Hệ thống gồm 2 dịch vụ độc lập:
-1. **Auth-Service (Cổng 8081)**: Quản lý người dùng, mã hóa mật khẩu, đăng nhập, và cấp phát thẻ thông hành (JWT).
-2. **Product-Service (Cổng 8082)**: Quản lý thông tin sản phẩm. Được bảo vệ bởi Spring Security, bắt buộc người dùng phải có JWT (cấp bởi Auth-Service) mới được quyền thêm sản phẩm mới.
+## 2. Sơ đồ Kiến trúc (Architecture)
 
-## 🚀 Hướng dẫn chạy dự án
-### 1. Chuẩn bị Cơ sở dữ liệu
-- Mở MySQL Workbench.
-- Tạo 2 database rỗng:
-  ```sql
-  CREATE DATABASE auth_db;
-  CREATE DATABASE product_db;
-  ```
-
-### 2. Cấu hình Mật khẩu
-- Mở file `application.yml` ở cả 2 thư mục `auth-service` và `product-service`.
-- Sửa lại `username` và `password` cho khớp với MySQL trên máy của bạn.
-
-### 3. Khởi động
-Mở 2 cửa sổ Terminal (Command Prompt/PowerShell) riêng biệt ở gốc thư mục của từng service và chạy:
-```bash
-# Ở thư mục auth-service
-mvn spring-boot:run
-
-# Ở thư mục product-service
-mvn spring-boot:run
+```text
+[ C L I E N T ]  ====>  [ ZUUL GATEWAY (Port: 8080) ]
+                                |
+             +------------------+------------------+
+             |                                     |
+  [ AUTH SERVICE (Port: 8081) ]         [ PRODUCT SERVICE (Port: 8082) ]
+             |                                     |
+             +--------[ EUREKA REGISTRY (8761) ]---+
+           
+(Toàn bộ cấu hình được lấy từ CONFIG SERVER (8888) liên kết với GitHub Repo)
 ```
 
-## 🧪 Kịch bản Test End-to-End (E2E) bằng Postman
-**Bước 1: Đăng ký tài khoản (Auth-Service)**
-- `POST http://localhost:8081/api/auth/register`
-- Body (JSON):
-```json
-{
-    "username": "admin",
-    "password": "123",
-    "email": "admin@example.com"
-}
+## 3. Yêu cầu Hệ thống & Cài đặt
+
+1. Đảm bảo đã cài đặt JDK 11 hoặc 17 và Maven.
+2. Cài đặt MySQL Server.
+3. Tạo cơ sở dữ liệu rỗng trong MySQL. Hibernate sẽ tự động tạo bảng (tùy thuộc vào `ddl-auto`):
+```sql
+CREATE DATABASE auth_db;
+CREATE DATABASE product_db;
 ```
 
-**Bước 2: Đăng nhập lấy Token (Auth-Service)**
-- `POST http://localhost:8081/api/auth/login`
-- Body (JSON):
-```json
-{
-    "username": "admin",
-    "password": "123"
-}
-```
-> 👉 *Hãy COPY chuỗi Token cực dài trả về.*
+## 4. Thứ tự khởi động dịch vụ (RẤT QUAN TRỌNG)
 
-**Bước 3: Xem danh sách sản phẩm (Product-Service) - Không cần Token**
-- `GET http://localhost:8082/api/products`
+Mở 5 cửa sổ Terminal (hoặc Command Prompt) khác nhau. Khởi động lần lượt theo đúng thứ tự (đợi service trước báo chạy thành công rồi mới bật service sau):
 
-**Bước 4: Thêm sản phẩm mới (Product-Service) - Bắt buộc có Token**
-- `POST http://localhost:8082/api/products`
-- **Header**: Chuyển sang tab Authorization -> Chọn `Bearer Token` -> Dán chuỗi Token vừa copy vào.
-- Body (JSON):
-```json
-{
-    "name": "Macbook Pro M3",
-    "price": 2000,
-    "description": "Laptop xịn"
-}
-```
+1. **`config-server`** (Cổng 8888): Chạy đầu tiên để kéo cấu hình từ GitHub.
+   ```bash
+   cd config-server
+   mvn spring-boot:run
+   ```
+2. **`eureka-server`** (Cổng 8761): 
+   ```bash
+   cd eureka-server
+   mvn spring-boot:run
+   ```
+3. **`auth-service`** (Cổng 8081):
+   ```bash
+   cd auth-service
+   mvn spring-boot:run
+   ```
+4. **`product-service`** (Cổng 8082):
+   ```bash
+   cd product-service
+   mvn spring-boot:run
+   ```
+5. **`gateway-server`** (Cổng 8080): Chạy cuối cùng và đợi khoảng 30s để Zuul đồng bộ danh sách API từ Eureka.
+   ```bash
+   cd gateway-server
+   mvn spring-boot:run
+   ```
+
+## 5. Danh sách API Test qua Gateway (Cổng 8080)
+
+> URL gốc để test: `http://localhost:8080`
+
+### 5.1. Auth Service
+* **Đăng ký tài khoản mới**
+  - **Method**: `POST`
+  - **Endpoint**: `/api/auth/register`
+  - **Body (JSON)**:
+    ```json
+    {
+        "username": "admin",
+        "password": "password123",
+        "email": "admin@example.com"
+    }
+    ```
+
+* **Đăng nhập (Lấy Token)**
+  - **Method**: `POST`
+  - **Endpoint**: `/api/auth/login`
+  - **Body (JSON)**:
+    ```json
+    {
+        "username": "admin",
+        "password": "password123"
+    }
+    ```
+
+* **Lấy thông tin User hiện tại (Yêu cầu Token)**
+  - **Method**: `GET`
+  - **Endpoint**: `/api/auth/me`
+  - **Headers**: `Authorization: Bearer <Your_JWT_Token>`
+
+### 5.2. Product Service
+* **Lấy danh sách tất cả sản phẩm**
+  - **Method**: `GET`
+  - **Endpoint**: `/api/products`
+
+* **Test giao tiếp nội bộ (Product -> Auth)**
+  - **Method**: `GET`
+  - **Endpoint**: `/api/products/check-auth`
