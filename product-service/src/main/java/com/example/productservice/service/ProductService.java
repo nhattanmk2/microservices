@@ -17,6 +17,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final AuthClient authClient;
+    private final org.springframework.web.client.RestTemplate restTemplate;
 
     public String checkAuthServiceStatus() {
         try {
@@ -26,6 +27,16 @@ public class ProductService {
         } catch (Exception e) {
             // Handle timeout or connection refused
             return "Lỗi! Không thể kết nối tới Auth Service. Chi tiết: " + e.getMessage();
+        }
+    }
+
+    public String fetchExternalData() {
+        try {
+            // Dùng RestTemplate để gọi API bên ngoài (Internet)
+            String url = "https://jsonplaceholder.typicode.com/todos/1";
+            return restTemplate.getForObject(url, String.class);
+        } catch (Exception e) {
+            return "Lỗi khi gọi external server: " + e.getMessage();
         }
     }
 

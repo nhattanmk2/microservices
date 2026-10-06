@@ -22,6 +22,12 @@ public class ProductController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/external-demo")
+    public ResponseEntity<String> testExternalCall() {
+        // Dùng RestTemplate gọi ra ngoài Internet
+        return ResponseEntity.ok(productService.fetchExternalData());
+    }
+
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
