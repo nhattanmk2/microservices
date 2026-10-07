@@ -39,7 +39,7 @@ public class SecurityConfig {
             .csrf().disable() // Disable CSRF for REST APIs
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and() // Stateless sessions
             .authorizeRequests()
-                .antMatchers("/api/auth/register", "/api/auth/login", "/api/auth/status").permitAll() // Public endpoints
+                .antMatchers("/api/auth/register", "/api/auth/login", "/api/auth/status", "/api/auth/users/**").permitAll() // Public endpoints
                 .anyRequest().authenticated()
             .and()
             .httpBasic().disable()
