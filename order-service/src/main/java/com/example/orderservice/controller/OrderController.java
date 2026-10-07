@@ -4,10 +4,8 @@ import com.example.orderservice.dto.OrderResponse;
 import com.example.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import com.example.orderservice.entity.Order;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -18,6 +16,17 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderDetails(id));
+        try {
+            return ResponseEntity.ok(orderService.getOrderDetails(id));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<Order> createOrder(@RequestParam String buyerUsername, 
+                                             @RequestParam Long productId, 
+                                             @RequestParam int quantity) {
+        return ResponseEntity.ok(orderService.createOrder(buyerUsername, productId, quantity));
     }
 }

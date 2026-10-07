@@ -9,8 +9,8 @@ import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 
 @Service
 @RequiredArgsConstructor
@@ -20,12 +20,8 @@ public class OrderService {
     private final AuthClient authClient;
     private final ProductClient productClient;
 
-    // Tạo sẵn 1 đơn hàng mẫu vào DB lúc khởi động để test cho nhanh
-    @PostConstruct
-    public void initDummyOrder() {
-        if (orderRepository.count() == 0) {
-            orderRepository.save(new Order(null, "admin", 1L, 2));
-        }
+    public Order createOrder(String buyerUsername, Long productId, int quantity) {
+        return orderRepository.save(new Order(null, buyerUsername, productId, quantity));
     }
 
     public OrderResponse getOrderDetails(Long orderId) {
