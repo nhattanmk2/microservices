@@ -3,6 +3,7 @@ package com.example.authservice.service;
 import com.example.authservice.dto.AuthResponse;
 import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.RegisterRequest;
+import com.example.authservice.dto.UserDto;
 import com.example.authservice.entity.User;
 import com.example.authservice.repository.UserRepository;
 import com.example.authservice.security.JwtUtils;
@@ -47,6 +48,12 @@ public class AuthService {
                 
         userRepository.save(user);
         return "User registered successfully";
+    }
+
+    public UserDto getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return new UserDto(user.getId(), user.getUsername(), user.getEmail());
     }
 }
 

@@ -29,6 +29,10 @@ zuul:
       path: /api/products/**
       service-id: product-service
       strip-prefix: false
+    order-service:
+      path: /api/orders/**
+      service-id: order-service
+      strip-prefix: false
 
 # ---- Timeout (Ribbon + Hystrix đi kèm Zuul) ----
 ribbon:

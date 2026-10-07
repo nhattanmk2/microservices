@@ -3,6 +3,7 @@ package com.example.authservice.controller;
 import com.example.authservice.dto.AuthResponse;
 import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.RegisterRequest;
+import com.example.authservice.dto.UserDto;
 import com.example.authservice.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -49,5 +50,11 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         return ResponseEntity.ok("Xin chào! Bạn đang đăng nhập dưới tên: " + username);
+    }
+
+    // Cung cấp dữ liệu cho Order Service (hoặc các service khác qua Feign)
+    @GetMapping("/users/{username}")
+    public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(authService.getUserByUsername(username));
     }
 }
