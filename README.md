@@ -19,11 +19,11 @@ Dự án mô phỏng hệ thống thương mại điện tử sử dụng kiến
 ```text
 [ C L I E N T ]  ====>  [ ZUUL GATEWAY (Port: 8080) ]
                                 |
-             +------------------+------------------+
-             |                                     |
-  [ AUTH SERVICE (Port: 8081) ]         [ PRODUCT SERVICE (Port: 8082) ]
-             |                                     |
-             +--------[ EUREKA REGISTRY (8761) ]---+
+             +------------------+------------------+------------------+
+             |                                     |                  |
+  [ AUTH SERVICE (8081) ]         [ PRODUCT SERVICE (8082) ]   [ ORDER SERVICE (8083) ]
+             |                                     |                  |
+             +--------[ EUREKA REGISTRY (8761) ]---+------------------+
            
 (Toàn bộ cấu hình được lấy từ CONFIG SERVER (8888) liên kết với GitHub Repo)
 ```
@@ -38,35 +38,18 @@ CREATE DATABASE auth_db;
 CREATE DATABASE product_db;
 ```
 
-## 4. Thứ tự khởi động dịch vụ (RẤT QUAN TRỌNG)
+## 4. Hướng dẫn chạy Project bằng IntelliJ IDEA
 
-Mở 5 cửa sổ Terminal (hoặc Command Prompt) khác nhau. Khởi động lần lượt theo đúng thứ tự (đợi service trước báo chạy thành công rồi mới bật service sau):
+Dự án này bao gồm nhiều module độc lập. Thứ tự khởi động là **VÔ CÙNG QUAN TRỌNG**. Hãy chạy từng service một và chờ service đó báo "Started" trong console trước khi chạy service tiếp theo:
 
-1. **`config-server`** (Cổng 8888): Chạy đầu tiên để kéo cấu hình từ GitHub.
-   ```bash
-   cd config-server
-   mvn spring-boot:run
-   ```
-2. **`eureka-server`** (Cổng 8761): 
-   ```bash
-   cd eureka-server
-   mvn spring-boot:run
-   ```
-3. **`auth-service`** (Cổng 8081):
-   ```bash
-   cd auth-service
-   mvn spring-boot:run
-   ```
-4. **`product-service`** (Cổng 8082):
-   ```bash
-   cd product-service
-   mvn spring-boot:run
-   ```
-5. **`gateway-server`** (Cổng 8080): Chạy cuối cùng và đợi khoảng 30s để Zuul đồng bộ danh sách API từ Eureka.
-   ```bash
-   cd gateway-server
-   mvn spring-boot:run
-   ```
+1. **`config-server` (Cổng 8888)**: Chạy file `ConfigServerApplication.java` đầu tiên để lấy cấu hình từ GitHub.
+2. **`eureka-server` (Cổng 8761)**: Chạy file `EurekaServerApplication.java` để bật Discovery Service.
+3. **`auth-service` (Cổng 8081)**: Chạy file `AuthServiceApplication.java`.
+4. **`product-service` (Cổng 8082)**: Chạy file `ProductServiceApplication.java`.
+5. **`order-service` (Cổng 8083)**: Chạy file `OrderServiceApplication.java`.
+6. **`gateway-server` (Cổng 8080)**: Chạy file `GatewayServerApplication.java` cuối cùng. (Đợi khoảng 30s sau khi khởi động để Zuul kịp đồng bộ danh sách API từ Eureka).
+
+*Mẹo trên IntelliJ:* Bạn có thể mở công cụ **Services** (`View -> Tool Windows -> Services`), thêm cấu hình `Spring Boot` để có thể quản lý và bấm chạy nhanh toàn bộ các microservices cùng lúc ở một giao diện duy nhất.
 
 ## 5. Danh sách API Test qua Gateway (Cổng 8080)
 
@@ -108,4 +91,20 @@ Mở 5 cửa sổ Terminal (hoặc Command Prompt) khác nhau. Khởi động l�
 
 * **Test giao tiếp nội bộ (Product -> Auth)**
   - **Method**: `GET`
-  - **Endpoint**: `/api/products/check-auth`
+  - **Endpoint**: `/api/products/external-demo`
+
+### 5.3. Order Service
+* **Tạo đơn hàng mới (Gọi Product & Auth Service)**
+  - **Method**: `POST`
+  - **Endpoint**: `/api/orders?buyerUsername=admin&productId=1&quantity=2`
+
+* **Lấy chi tiết đơn hàng (Kèm thông tin User và Product)**
+  - **Method**: `GET`
+  - **Endpoint**: `/api/orders/1`
+
+### 5.4. Hướng dẫn Test API bằng Postman
+Dự án đã tích hợp sẵn thư mục `postman/` chứa các cấu hình tự động. Để test dễ dàng:
+1. Mở phần mềm **Postman**.
+2. Bấm vào **Import** và chọn thư mục `postman/` nằm ở thư mục gốc của project (hoặc trỏ tới file `collections/` bên trong).
+3. Toàn bộ các API đã được cấu hình sẵn môi trường (Environment) và các Endpoint.
+4. Bạn chỉ cần bấm chạy lần lượt các Request đã lưu thay vì phải tự gõ tay lại!
