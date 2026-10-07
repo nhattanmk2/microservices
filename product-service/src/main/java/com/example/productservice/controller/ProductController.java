@@ -35,9 +35,9 @@ public class ProductController {
     
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
-        return productService.getProductById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ProductDTO productDTO = productService.getProductById(id)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Sản phẩm với ID " + id + " không tồn tại!"));
+        return ResponseEntity.ok(productDTO);
     }
 
     @PostMapping
