@@ -19,9 +19,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private String buyerUsername; // Liên kết sang User
-    
-    private Long productId; // Liên kết sang Product
-    
+    private String buyerUsername;
+    private Long productId;
     private int quantity;
 }

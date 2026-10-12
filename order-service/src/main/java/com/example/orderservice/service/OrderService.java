@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -23,20 +24,14 @@ public class OrderService {
     }
 
     public OrderResponse getOrderDetails(Long orderId) {
-        // 1. Lấy đơn hàng từ Database
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         
-        // 2. Gọi sang Auth-Service qua Feign
         UserDto buyer = authClient.getUserByUsername(order.getBuyerUsername());
-        
-        // 3. Gọi sang Product-Service qua Feign
         ProductDto product = productClient.getProductById(order.getProductId());
         
-        // 4. Tính tổng tiền
         double totalPrice = product.getPrice().doubleValue() * order.getQuantity();
 
-        // 5. Gộp dữ liệu
         return new OrderResponse(
                 order.getId(),
                 order.getQuantity(),

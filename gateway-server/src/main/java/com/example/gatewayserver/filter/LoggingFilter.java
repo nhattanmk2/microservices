@@ -10,8 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * PRE filter: log mọi request đi vào Gateway và service đích mà Zuul sẽ chuyển tới.
- * Chạy sau PreDecorationFilter để đã có thông tin route (serviceId).
+ * Zuul pre-filter to log incoming requests and target route destinations.
  */
 @Component
 public class LoggingFilter extends ZuulFilter {

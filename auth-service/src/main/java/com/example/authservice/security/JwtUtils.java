@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.function.Function;
 
 @Component
+@SuppressWarnings("null")
 public class JwtUtils {
 
     @Value("${jwt.secret}")
@@ -22,12 +23,10 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private int jwtExpirationMs;
 
-    // Lấy Key từ chuỗi bí mật
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    // Tạo JWT từ thông tin User
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
@@ -37,12 +36,10 @@ public class JwtUtils {
                 .compact();
     }
 
-    // Lấy username từ chuỗi JWT
     public String getUsernameFromToken(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // Kiểm tra token còn hạn hay không
     public boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));

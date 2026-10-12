@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -21,18 +22,15 @@ public class ProductService {
 
     public String checkAuthServiceStatus() {
         try {
-            // Send a GET request to auth-service using Feign
             String response = authClient.getAuthStatus();
             return "Phản hồi từ Auth Service (thông qua Feign): " + response;
         } catch (Exception e) {
-            // Handle timeout or connection refused
             return "Lỗi! Không thể kết nối tới Auth Service. Chi tiết: " + e.getMessage();
         }
     }
 
     public String fetchExternalData() {
         try {
-            // Dùng RestTemplate để gọi API bên ngoài (Internet)
             String url = "https://jsonplaceholder.typicode.com/todos/1";
             return restTemplate.getForObject(url, String.class);
         } catch (Exception e) {
@@ -55,7 +53,7 @@ public class ProductService {
                 .name(dto.getName())
                 .price(dto.getPrice())
                 .description(dto.getDescription())
-                .stock(100) // Default stock
+                .stock(100)
                 .build();
         Product saved = productRepository.save(product);
         return mapToDTO(saved);

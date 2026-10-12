@@ -44,7 +44,6 @@ public class AuthController {
         }
     }
 
-    // API CẦN CÓ TOKEN MỚI VÀO ĐƯỢC
     @GetMapping("/me")
     public ResponseEntity<String> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -52,7 +51,6 @@ public class AuthController {
         return ResponseEntity.ok("Xin chào! Bạn đang đăng nhập dưới tên: " + username);
     }
 
-    // Cung cấp dữ liệu cho Order Service (hoặc các service khác qua Feign)
     @GetMapping("/users/{username}")
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
         return ResponseEntity.ok(authService.getUserByUsername(username));

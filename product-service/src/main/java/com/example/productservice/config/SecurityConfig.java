@@ -23,18 +23,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors().and()
-            .csrf().disable() // Disable CSRF for REST API
+            .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeRequests()
-                // Cho phép mọi người được xem danh sách sản phẩm (GET)
                 .antMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                // Các thao tác thêm, sửa, xóa (POST, PUT, DELETE) bắt buộc phải có Token
                 .anyRequest().authenticated()
             .and()
             .httpBasic().disable()
             .formLogin().disable();
 
-        // Gắn chốt chặn kiểm tra Token vào
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

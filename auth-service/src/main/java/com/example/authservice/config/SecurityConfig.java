@@ -36,16 +36,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors().and()
-            .csrf().disable() // Disable CSRF for REST APIs
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and() // Stateless sessions
+            .csrf().disable()
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeRequests()
-                .antMatchers("/api/auth/register", "/api/auth/login", "/api/auth/status", "/api/auth/users/**").permitAll() // Public endpoints
+                .antMatchers("/api/auth/register", "/api/auth/login", "/api/auth/status", "/api/auth/users/**").permitAll()
                 .anyRequest().authenticated()
             .and()
             .httpBasic().disable()
-            .formLogin().disable(); // Disable default login form
+            .formLogin().disable();
 
-        // Add JWT token filter
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

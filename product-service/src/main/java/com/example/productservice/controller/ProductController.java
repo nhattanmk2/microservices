@@ -24,7 +24,6 @@ public class ProductController {
 
     @GetMapping("/external-demo")
     public ResponseEntity<String> testExternalCall() {
-        // Dùng RestTemplate gọi ra ngoài Internet
         return ResponseEntity.ok(productService.fetchExternalData());
     }
 
