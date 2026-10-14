@@ -25,7 +25,7 @@ public class OrderController {
 
 
     @PostMapping
-    public ResponseEntity<Order> createOrder(@RequestParam String buyerUsername, 
+    public ResponseEntity<Order> createOrder(@RequestHeader("X-Auth-Username") String buyerUsername, 
                                              @RequestParam Long productId, 
                                              @RequestParam int quantity) {
         return ResponseEntity.ok(orderService.createOrder(buyerUsername, productId, quantity));

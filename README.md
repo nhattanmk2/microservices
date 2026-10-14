@@ -159,10 +159,11 @@ Hệ thống áp dụng phương pháp kiểm thử tự động ở tầng Serv
 
 Toàn bộ test cases áp dụng nguyên tắc **Dependency Isolation**: cô lập hoàn toàn I/O, database và network calls để đảm bảo tính deterministic và tốc độ thực thi cao.
 
-### 7.1. Test Suites Matrix (15/15 Passed)
+### 7.1. Test Suites Matrix (23/23 Passed)
 
 | Service | Test Class | Total Tests | Test Scenarios Covered | Status |
 | :--- | :--- | :---: | :--- | :---: |
+| `gateway-server` | `JwtUtilsTest`<br>`JwtAuthenticationFilterTest` | 8 | • JWT token generation & HMAC-SHA verification<br>• Token expiration & malformed token rejection<br>• Whitelist path bypass (`/api/auth/**`, `GET /api/products`)<br>• Missing Authorization header 401 rejection<br>• User identity propagation via `X-Auth-Username` header | **PASSED** (100%) |
 | `auth-service` | `AuthServiceTest` | 6 | • User registration with BCrypt hashing<br>• Username duplicate collision prevention<br>• Authentication & JWT generation<br>• Bad credentials exception handling<br>• Feign user lookup by username<br>• User not found exception handling | **PASSED** (100%) |
 | `product-service` | `ProductServiceTest` | 4 | • Query all products mapping to DTOs<br>• Product persistence with default inventory<br>• Feign integration status check<br>• Fallback error handling when upstream fails | **PASSED** (100%) |
 | `order-service` | `OrderServiceTest` | 5 | • Order creation with generated ID<br>• **Data aggregation from Auth & Product clients**<br>• Order not found short-circuit verification<br>• Auth-Service unavailable error handling<br>• Product-Service read timeout handling | **PASSED** (100%) |
@@ -171,6 +172,9 @@ Toàn bộ test cases áp dụng nguyên tắc **Dependency Isolation**: cô l�
 
 Chạy test theo từng service:
 ```bash
+# Gateway Server test suite (Security & Zuul Filter)
+mvn -f gateway-server/pom.xml test
+
 # Auth Service test suite
 mvn -f auth-service/pom.xml test
 
