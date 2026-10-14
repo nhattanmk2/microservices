@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
  * and propagating the authenticated user's identity to downstream services.
  */
 @Component
+@SuppressWarnings("null")
 public class JwtAuthenticationFilter extends ZuulFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);

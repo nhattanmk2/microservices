@@ -1,9 +1,7 @@
 package com.example.authservice.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -11,10 +9,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class User {
+    
+    public User() {
+    }
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +32,15 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
+    @Builder
+    public User(Long id, String username, String password, String email, String role, LocalDateTime createdAt) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.role = role;
+        this.createdAt = createdAt;
+    }
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {

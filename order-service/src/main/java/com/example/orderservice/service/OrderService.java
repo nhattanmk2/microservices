@@ -7,17 +7,21 @@ import com.example.orderservice.dto.ProductDto;
 import com.example.orderservice.dto.UserDto;
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 @SuppressWarnings("null")
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final AuthClient authClient;
     private final ProductClient productClient;
+
+    public OrderService(OrderRepository orderRepository, AuthClient authClient, ProductClient productClient) {
+        this.orderRepository = orderRepository;
+        this.authClient = authClient;
+        this.productClient = productClient;
+    }
 
     public Order createOrder(String buyerUsername, Long productId, int quantity) {
         return orderRepository.save(new Order(null, buyerUsername, productId, quantity));

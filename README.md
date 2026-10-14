@@ -27,6 +27,7 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 ```
 
 ### Communication Patterns
+
 - **Edge Routing & API Gateway**: `gateway-server` tiếp nhận toàn bộ traffic bên ngoài, định tuyến động tới các business microservices dựa trên Service ID đăng ký từ Eureka.
 - **Service Discovery**: Các service tự động đăng ký metadata với `eureka-server` và định kỳ gửi heartbeat để duy trì trạng thái khả dụng.
 - **Inter-Service Communication**: Sử dụng declarative REST client (`OpenFeign`) để thực hiện các lời gọi dịch vụ nội bộ (e.g., `order-service` tổng hợp dữ liệu đồng thời từ `auth-service` và `product-service`).
@@ -69,11 +70,13 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 ## 4. Prerequisites & Infrastructure Setup
 
 ### Yêu cầu môi trường
+
 - Java Development Kit (JDK) 17+
 - Apache Maven 3.8+
 - MySQL 8.0 (hoặc Docker engine)
 
 ### Khởi tạo cơ sở dữ liệu (MySQL)
+
 Khởi chạy container MySQL thông qua `docker-compose.yml` có sẵn tại thư mục gốc:
 
 ```bash
@@ -81,6 +84,7 @@ docker compose up -d
 ```
 
 Hoặc tạo database thủ công trên MySQL instance cục bộ:
+
 ```sql
 CREATE DATABASE IF NOT EXISTS auth_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS product_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -113,6 +117,7 @@ Do có sự phụ thuộc về cấu hình và service registry, các service c�
 Toàn bộ request từ client được gửi qua Gateway tại `http://localhost:8080`.
 
 ### 6.1. Authentication Service (`/api/auth/**`)
+
 | Method | Endpoint | Headers | Description |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/register` | `Content-Type: application/json` | Đăng ký tài khoản người dùng mới |
@@ -121,6 +126,7 @@ Toàn bộ request từ client được gửi qua Gateway tại `http://localhos
 | `GET` | `/api/auth/status` | — | Health/status check endpoint |
 
 **Payload Đăng ký (`POST /api/auth/register`):**
+
 ```json
 {
   "username": "admin",
@@ -130,6 +136,7 @@ Toàn bộ request từ client được gửi qua Gateway tại `http://localhos
 ```
 
 **Payload Đăng nhập (`POST /api/auth/login`):**
+
 ```json
 {
   "username": "admin",
@@ -138,6 +145,7 @@ Toàn bộ request từ client được gửi qua Gateway tại `http://localhos
 ```
 
 ### 6.2. Product Service (`/api/products/**`)
+
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :---: | :--- |
 | `GET` | `/api/products` | Public | Lấy danh sách toàn bộ sản phẩm |
@@ -146,6 +154,7 @@ Toàn bộ request từ client được gửi qua Gateway tại `http://localhos
 | `GET` | `/api/products/external-demo` | Public | Kiểm tra kết nối liên service (Product -> Auth) |
 
 ### 6.3. Order Service (`/api/orders/**`)
+
 | Method | Endpoint | Query / Path Params | Description |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/orders` | `buyerUsername`, `productId`, `quantity` | Tạo đơn hàng mới |
@@ -163,14 +172,15 @@ Toàn bộ test cases áp dụng nguyên tắc **Dependency Isolation**: cô l�
 
 | Service | Test Class | Total Tests | Test Scenarios Covered | Status |
 | :--- | :--- | :---: | :--- | :---: |
-| `gateway-server` | `JwtUtilsTest`<br>`JwtAuthenticationFilterTest` | 8 | • JWT token generation & HMAC-SHA verification<br>• Token expiration & malformed token rejection<br>• Whitelist path bypass (`/api/auth/**`, `GET /api/products`)<br>• Missing Authorization header 401 rejection<br>• User identity propagation via `X-Auth-Username` header | **PASSED** (100%) |
-| `auth-service` | `AuthServiceTest` | 6 | • User registration with BCrypt hashing<br>• Username duplicate collision prevention<br>• Authentication & JWT generation<br>• Bad credentials exception handling<br>• Feign user lookup by username<br>• User not found exception handling | **PASSED** (100%) |
-| `product-service` | `ProductServiceTest` | 4 | • Query all products mapping to DTOs<br>• Product persistence with default inventory<br>• Feign integration status check<br>• Fallback error handling when upstream fails | **PASSED** (100%) |
-| `order-service` | `OrderServiceTest` | 5 | • Order creation with generated ID<br>• **Data aggregation from Auth & Product clients**<br>• Order not found short-circuit verification<br>• Auth-Service unavailable error handling<br>• Product-Service read timeout handling | **PASSED** (100%) |
+| `gateway-server` | `JwtUtilsTest`, `JwtAuthenticationFilterTest` | 8 | JWT token generation & HMAC-SHA verification; Token expiration & malformed token rejection; Whitelist path bypass (`/api/auth/**`, `GET /api/products`); Missing Authorization header 401 rejection; User identity propagation via `X-Auth-Username` header | **PASSED** (100%) |
+| `auth-service` | `AuthServiceTest` | 6 | User registration with BCrypt hashing; Username duplicate collision prevention; Authentication & JWT generation; Bad credentials exception handling; Feign user lookup by username; User not found exception handling | **PASSED** (100%) |
+| `product-service` | `ProductServiceTest` | 4 | Query all products mapping to DTOs; Product persistence with default inventory; Feign integration status check; Fallback error handling when upstream fails | **PASSED** (100%) |
+| `order-service` | `OrderServiceTest` | 5 | Order creation with generated ID; **Data aggregation from Auth & Product clients**; Order not found short-circuit verification; Auth-Service unavailable error handling; Product-Service read timeout handling | **PASSED** (100%) |
 
 ### 7.2. Test Execution
 
 Chạy test theo từng service:
+
 ```bash
 # Gateway Server test suite (Security & Zuul Filter)
 mvn -f gateway-server/pom.xml test
@@ -190,6 +200,7 @@ mvn -f order-service/pom.xml test
 ## 8. Postman Integration
 
 Dự án cung cấp bộ Postman collection và environment đồng bộ tại thư mục `postman/`:
+
 - **Collection**: Tập hợp toàn bộ request phân loại theo từng microservice, có sẵn pre-configured headers và request body.
 - **Environment**: Định nghĩa biến môi trường `gateway_url` (`http://localhost:8080`) và token tự động trích xuất sau khi đăng nhập.
 - **Cách sử dụng**: Trong Postman, chọn **Import** -> trỏ đến thư mục `postman/` để nạp toàn bộ cấu hình vào workspace.

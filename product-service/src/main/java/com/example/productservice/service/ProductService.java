@@ -4,7 +4,6 @@ import com.example.productservice.dto.ProductDTO;
 import com.example.productservice.entity.Product;
 import com.example.productservice.repository.ProductRepository;
 import com.example.productservice.client.AuthClient;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,13 +11,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @SuppressWarnings("null")
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final AuthClient authClient;
     private final org.springframework.web.client.RestTemplate restTemplate;
+
+    public ProductService(ProductRepository productRepository, AuthClient authClient,
+                          org.springframework.web.client.RestTemplate restTemplate) {
+        this.productRepository = productRepository;
+        this.authClient = authClient;
+        this.restTemplate = restTemplate;
+    }
 
     public String checkAuthServiceStatus() {
         try {
