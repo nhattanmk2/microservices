@@ -10,10 +10,10 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 [ Client Applications / Consumers ]
                  │
                  ▼
-     [ API Gateway (Zuul) : 8080 ] ─────────────┐
-                 │                              │
-                 │ (Reverse Proxy / Routing)    │
-                 ▼                              │
+     [ API Gateway (Zuul) : 8080 ] ───────────────────┐
+                 │                                    │
+                 │ (Reverse Proxy / Routing)          │
+                 ▼                                    │
     ┌───────────────────────────────┐                 │
     │    Business Microservices     │                 ▼
     │  ├─ Auth Service      (8081)  │ ◄── [ Eureka Service Registry : 8761 ]
