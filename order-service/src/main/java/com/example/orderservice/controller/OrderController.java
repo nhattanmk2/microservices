@@ -29,7 +29,13 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestHeader("X-Auth-Username") String buyerUsername, 
                                              @RequestParam Long productId, 
-                                             @RequestParam int quantity) {
-        return ResponseEntity.ok(orderService.createOrder(buyerUsername, productId, quantity));
+                                             @RequestParam int quantity,
+                                             @RequestParam(required = false) String promotionCode) {
+        return ResponseEntity.ok(orderService.createOrder(buyerUsername, productId, quantity, promotionCode));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Order> cancelOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.cancelOrder(id));
     }
 }

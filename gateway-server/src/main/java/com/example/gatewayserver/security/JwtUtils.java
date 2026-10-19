@@ -31,6 +31,12 @@ public class JwtUtils {
         return getClaims(token).getSubject();
     }
 
+    public String getRoleFromToken(String token) {
+        Claims claims = getClaims(token);
+        Object role = claims.get("role");
+        return role != null ? role.toString() : "USER";
+    }
+
     public Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key())

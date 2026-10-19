@@ -116,4 +116,26 @@ class JwtAuthenticationFilterTest {
         assertTrue(RequestContext.getCurrentContext().sendZuulResponse());
         assertEquals("john_doe", RequestContext.getCurrentContext().getZuulRequestHeaders().get("x-auth-username"));
     }
+
+    @Test
+    @DisplayName("Request kèm token có role ADMIN sẽ chuyển tiếp cả header X-Auth-Username và X-Auth-Role")
+    void run_ValidTokenWithRole_PropagatesRoleHeader() {
+        String token = "valid.admin.jwt.token";
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/promotions");
+        request.addHeader("Authorization", "Bearer " + token);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        RequestContext.getCurrentContext().setRequest(request);
+        RequestContext.getCurrentContext().setResponse(response);
+
+        when(jwtUtils.validateToken(token)).thenReturn(true);
+        when(jwtUtils.getUsernameFromToken(token)).thenReturn("admin");
+        when(jwtUtils.getRoleFromToken(token)).thenReturn("ADMIN");
+
+        filter.run();
+
+        assertTrue(RequestContext.getCurrentContext().sendZuulResponse());
+        assertEquals("admin", RequestContext.getCurrentContext().getZuulRequestHeaders().get("x-auth-username"));
+        assertEquals("ADMIN", RequestContext.getCurrentContext().getZuulRequestHeaders().get("x-auth-role"));
+    }
 }

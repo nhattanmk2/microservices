@@ -99,9 +99,14 @@ public class JwtAuthenticationFilter extends ZuulFilter {
             return null;
         }
 
-        log.info("Authenticated request for user '{}' => {}", username, request.getRequestURI());
+        String role = jwtUtils.getRoleFromToken(token);
+
+        log.info("Authenticated request for user '{}' (role: '{}') => {}", username, role, request.getRequestURI());
         // Propagate authenticated identity to downstream services (and override any spoofed client header)
         ctx.addZuulRequestHeader("X-Auth-Username", username);
+        if (StringUtils.hasText(role)) {
+            ctx.addZuulRequestHeader("X-Auth-Role", role);
+        }
 
         return null;
     }

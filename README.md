@@ -14,24 +14,25 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
                  │                              │
                  │ (Reverse Proxy / Routing)    │
                  ▼                              │
-    ┌─────────────────────────┐                 │
-    │  Business Microservices │                 ▼
-    │  ├─ Auth Service (8081) │ ◄── [ Eureka Service Registry : 8761 ]
-    │  ├─ Product Service(8082)        (Heartbeat & Discovery)
-    │  └─ Order Service (8083)│                 ▲
-    └────────────┬────────────┘                 │
-                 │ (OpenFeign Inter-service)    │
-                 ▼                              │
-    [ Centralized Config (8888) ] ──────────────┘
-         (Git-backed config)
+    ┌───────────────────────────────┐                 │
+    │    Business Microservices     │                 ▼
+    │  ├─ Auth Service      (8081)  │ ◄── [ Eureka Service Registry : 8761 ]
+    │  ├─ Product Service   (8082)  │        (Heartbeat & Discovery)
+    │  ├─ Order Service     (8083)  │                 ▲
+    │  └─ Promotion Service (8084)  │                 │
+    └──────────────┬────────────────┘                 │
+                   │ (OpenFeign Inter-service)        │
+                   ▼                                  │
+      [ Centralized Config (8888) ] ──────────────────┘
+           (Git-backed config)
 ```
 
 ### Communication Patterns
 
 - **Edge Routing & API Gateway**: `gateway-server` tiếp nhận toàn bộ traffic bên ngoài, định tuyến động tới các business microservices dựa trên Service ID đăng ký từ Eureka.
 - **Service Discovery**: Các service tự động đăng ký metadata với `eureka-server` và định kỳ gửi heartbeat để duy trì trạng thái khả dụng.
-- **Inter-Service Communication**: Sử dụng declarative REST client (`OpenFeign`) để thực hiện các lời gọi dịch vụ nội bộ (e.g., `order-service` tổng hợp dữ liệu đồng thời từ `auth-service` và `product-service`).
-- **Security & Token Propagation**: Xác thực phi trạng thái (Stateless) qua JWT; gateway hỗ trợ cấu hình bypass cho các public endpoint và forward authorization headers cho downstream services.
+- **Inter-Service Communication**: Sử dụng declarative REST client (`OpenFeign`) để thực hiện các lời gọi dịch vụ nội bộ (e.g., `order-service` tổng hợp dữ liệu đồng thời từ `auth-service`, `product-service` và tính/hoàn voucher từ `promotion-service`).
+- **Security & Token Propagation**: Xác thực phi trạng thái (Stateless) qua JWT; gateway hỗ trợ cấu hình bypass cho các public endpoint và forward authorization headers (`X-Auth-Username`, `X-Auth-Role`) cho downstream services.
 - **Centralized Configuration**: Quản lý tập trung toàn bộ cấu hình môi trường thông qua `config-server` liên kết GitHub repository.
 
 ---
@@ -49,7 +50,7 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 | **Inter-Service Client** | Spring Cloud OpenFeign | OpenFeign 3.x | Declarative REST client nội bộ |
 | **Persistence Layer** | Spring Data JPA / Hibernate | 2.7.18 | ORM & quản lý truy xuất cơ sở dữ liệu |
 | **Database** | MySQL Server | 8.0 | Hệ quản trị cơ sở dữ liệu quan hệ |
-| **Security** | Spring Security & JJWT | 0.9.1 | Xác thực JWT & phân quyền truy cập |
+| **Security** | Spring Security & JJWT | 0.9.1 | Xác thực JWT & phân quyền truy cập (Admin/User) |
 | **Automated Testing** | JUnit 5 & Mockito | Jupiter / Mockito 4.x | Unit Testing cho Service Layer theo chuẩn BDD |
 
 ---
@@ -60,10 +61,11 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 | :--- | :---: | :--- | :--- | :--- |
 | `config-server` | **8888** | `config-server` | — | Nạp và phân phối cấu hình từ Git |
 | `eureka-server` | **8761** | `eureka-server` | — | Service Discovery Server |
-| `auth-service` | **8081** | `auth-service` | `auth_db` | Đăng ký, đăng nhập, cấp phát JWT, xác thực user |
+| `auth-service` | **8081** | `auth-service` | `auth_db` | Đăng ký, đăng nhập, cấp phát JWT kèm role (USER/ADMIN), tra cứu user |
 | `product-service` | **8082** | `product-service` | `product_db` | Quản lý danh mục sản phẩm, tồn kho |
-| `order-service` | **8083** | `order-service` | In-Memory / JPA | Xử lý đơn hàng, tổng hợp thông tin qua Feign |
-| `gateway-server` | **8080** | `gateway-server` | — | Điểm vào duy nhất cho API, reverse proxy |
+| `order-service` | **8083** | `order-service` | In-Memory / JPA | Xử lý đơn hàng, áp dụng voucher, hủy đơn hoàn khuyến mãi |
+| `promotion-service` | **8084** | `promotion-service` | `promotion_db` | Quản lý mã voucher, kiểm tra điều kiện, tính chiết khấu & chống race condition |
+| `gateway-server` | **8080** | `gateway-server` | — | Điểm vào duy nhất cho API, reverse proxy, JWT filter & header propagation |
 
 ---
 
@@ -88,6 +90,7 @@ Hoặc tạo database thủ công trên MySQL instance cục bộ:
 ```sql
 CREATE DATABASE IF NOT EXISTS auth_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS product_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS promotion_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ---
@@ -104,6 +107,7 @@ Do có sự phụ thuộc về cấu hình và service registry, các service c�
    - `auth-service` (`AuthServiceApplication.java` - Port **8081**)
    - `product-service` (`ProductServiceApplication.java` - Port **8082**)
    - `order-service` (`OrderServiceApplication.java` - Port **8083**)
+   - `promotion-service` (`PromotionServiceApplication.java` - Port **8084**)
 
 3. **Phase 3: Edge Routing**
    - `gateway-server` (`GatewayServerApplication.java` - Port **8080**): Chờ 15–30 giây để Zuul hoàn tất chu kỳ fetch registry định kỳ từ Eureka.
@@ -157,8 +161,22 @@ Toàn bộ request từ client được gửi qua Gateway tại `http://localhos
 
 | Method | Endpoint | Query / Path Params | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/orders` | `buyerUsername`, `productId`, `quantity` | Tạo đơn hàng mới |
-| `GET` | `/api/orders/{id}` | `id` (Order ID) | Lấy chi tiết đơn hàng (tổng hợp dữ liệu qua Feign) |
+| `POST` | `/api/orders` | `productId`, `quantity`, `promotionCode` (optional) | Tạo đơn hàng mới, tự động tính chiết khấu và consume voucher |
+| `GET` | `/api/orders/{id}` | `id` (Order ID) | Lấy chi tiết đơn hàng (tổng hợp dữ liệu qua Feign kèm thông tin chiết khấu) |
+| `POST` | `/api/orders/{id}/cancel` | `id` (Order ID) | Hủy đơn hàng và tự động hoàn lại lượt sử dụng voucher (Refund Promotion) |
+
+### 6.4. Promotion Service (`/api/promotions/**`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/api/promotions` | Public | Lấy danh sách toàn bộ khuyến mãi / voucher đang có hiệu lực |
+| `GET` | `/api/promotions/{code}` | Public | Lấy chi tiết thông tin và điều kiện của mã voucher |
+| `GET` | `/api/promotions/product/{productId}` | Public | Lấy danh sách voucher áp dụng được cho sản phẩm cụ thể |
+| `POST` | `/api/promotions/apply` | Public / Bearer | Đánh giá & tính toán số tiền giảm giá cho đơn hàng |
+| `POST` | `/api/promotions/consume` | Internal / Feign | Ghi nhận sử dụng voucher và tăng `used_count` (chống race condition) |
+| `POST` | `/api/promotions/refund` | Internal / Feign | Hoàn lại lượt sử dụng voucher khi đơn hàng bị hủy |
+| `POST` | `/api/promotions` | ADMIN (Role) | Tạo mới chương trình khuyến mãi / voucher (yêu cầu quyền ADMIN) |
+| `PATCH` | `/api/promotions/{id}/status` | ADMIN (Role) | Bật / tắt trạng thái kích hoạt của khuyến mãi (`?active=true/false`) |
 
 ---
 
@@ -168,31 +186,35 @@ Hệ thống áp dụng phương pháp kiểm thử tự động ở tầng Serv
 
 Toàn bộ test cases áp dụng nguyên tắc **Dependency Isolation**: cô lập hoàn toàn I/O, database và network calls để đảm bảo tính deterministic và tốc độ thực thi cao.
 
-### 7.1. Test Suites Matrix (23/23 Passed)
+### 7.1. Test Suites Matrix (37/37 Passed - 100%)
 
 | Service | Test Class | Total Tests | Test Scenarios Covered | Status |
 | :--- | :--- | :---: | :--- | :---: |
-| `gateway-server` | `JwtUtilsTest`, `JwtAuthenticationFilterTest` | 8 | JWT token generation & HMAC-SHA verification; Token expiration & malformed token rejection; Whitelist path bypass (`/api/auth/**`, `GET /api/products`); Missing Authorization header 401 rejection; User identity propagation via `X-Auth-Username` header | **PASSED** (100%) |
-| `auth-service` | `AuthServiceTest` | 6 | User registration with BCrypt hashing; Username duplicate collision prevention; Authentication & JWT generation; Bad credentials exception handling; Feign user lookup by username; User not found exception handling | **PASSED** (100%) |
+| `gateway-server` | `JwtUtilsTest`, `JwtAuthenticationFilterTest` | 10 | JWT token generation & HMAC-SHA verification; Expiration & malformed token rejection; Whitelist path bypass (`/api/auth/**`, `GET /api/products`, `GET /api/promotions`); Missing header 401 rejection; Identity & Role propagation via `X-Auth-Username`, `X-Auth-Role` headers | **PASSED** (100%) |
+| `auth-service` | `AuthServiceTest` | 6 | User registration with BCrypt hashing; Role assignment (USER/ADMIN); Username duplicate collision prevention; Authentication & JWT generation with role claim; Feign user lookup | **PASSED** (100%) |
 | `product-service` | `ProductServiceTest` | 4 | Query all products mapping to DTOs; Product persistence with default inventory; Feign integration status check; Fallback error handling when upstream fails | **PASSED** (100%) |
-| `order-service` | `OrderServiceTest` | 5 | Order creation with generated ID; **Data aggregation from Auth & Product clients**; Order not found short-circuit verification; Auth-Service unavailable error handling; Product-Service read timeout handling | **PASSED** (100%) |
+| `order-service` | `OrderServiceTest` | 7 | Order creation without voucher; **Order creation with voucher: calculate discount & consume voucher**; Order cancellation with voucher refund; Order details aggregation from Auth & Product; Not found & timeout exception handling | **PASSED** (100%) |
+| `promotion-service` | `PromotionServiceTest` | 10 | Percentage discount with max cap; Fixed amount discount; Expired voucher rejection; Minimum order value condition; Global usage limit; Per-user limit enforcement; Specific product applicability; Atomic consume; Voucher refund on cancel; Admin RBAC authorization | **PASSED** (100%) |
 
 ### 7.2. Test Execution
 
 Chạy test theo từng service:
 
 ```bash
-# Gateway Server test suite (Security & Zuul Filter)
+# Gateway Server test suite (Security, Role Propagation & Zuul Filter)
 mvn -f gateway-server/pom.xml test
 
-# Auth Service test suite
+# Auth Service test suite (Authentication & Role-based JWT)
 mvn -f auth-service/pom.xml test
 
 # Product Service test suite
 mvn -f product-service/pom.xml test
 
-# Order Service test suite
+# Order Service test suite (Promotion Feign integration & Refund)
 mvn -f order-service/pom.xml test
+
+# Promotion Service test suite (Engine, Atomic Concurrency & RBAC)
+mvn -f promotion-service/pom.xml test
 ```
 
 ---

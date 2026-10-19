@@ -74,7 +74,10 @@ class AuthServiceTest {
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(jwtUtils.generateToken("john")).thenReturn("mocked.jwt.token.12345");
+        when(userRepository.findByUsername("john")).thenReturn(Optional.of(
+                User.builder().id(1L).username("john").email("john@example.com").role("USER").build()
+        ));
+        when(jwtUtils.generateToken(eq("john"), anyString())).thenReturn("mocked.jwt.token.12345");
 
         // When
         AuthResponse response = authService.login(request);
@@ -86,7 +89,7 @@ class AuthServiceTest {
         assertEquals("Login successful", response.getMessage());
 
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtUtils, times(1)).generateToken("john");
+        verify(jwtUtils, times(1)).generateToken(eq("john"), eq("USER"));
     }
 
     @Test

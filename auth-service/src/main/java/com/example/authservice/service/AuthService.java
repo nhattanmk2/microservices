@@ -35,7 +35,12 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
         
-        String token = jwtUtils.generateToken(authentication.getName());
+        String role = userRepository.findByUsername(authentication.getName())
+                .map(User::getRole)
+                .filter(r -> r != null && !r.trim().isEmpty())
+                .orElse("USER");
+
+        String token = jwtUtils.generateToken(authentication.getName(), role);
         return new AuthResponse(token, "Bearer", "Login successful");
     }
 
@@ -44,11 +49,15 @@ public class AuthService {
             throw new RuntimeException("Username already exists");
         }
         
+        String role = (request.getRole() != null && !request.getRole().trim().isEmpty())
+                ? request.getRole().trim().toUpperCase()
+                : "USER";
+
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
-                .role("USER")
+                .role(role)
                 .build();
                 
         userRepository.save(user);

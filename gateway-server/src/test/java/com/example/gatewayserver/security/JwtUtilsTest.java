@@ -54,4 +54,19 @@ class JwtUtilsTest {
     void validateToken_Malformed() {
         assertFalse(jwtUtils.validateToken("header.payload.signature_fake"));
     }
+
+    @Test
+    @DisplayName("Trích xuất role từ token thành công")
+    void getRoleFromToken_Success() {
+        String token = Jwts.builder()
+                .setSubject("manager")
+                .claim("role", "ADMIN")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 60000))
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(TEST_SECRET)), SignatureAlgorithm.HS256)
+                .compact();
+
+        assertEquals("manager", jwtUtils.getUsernameFromToken(token));
+        assertEquals("ADMIN", jwtUtils.getRoleFromToken(token));
+    }
 }

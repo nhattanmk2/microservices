@@ -2,9 +2,8 @@ package com.example.orderservice.service;
 
 import com.example.orderservice.client.AuthClient;
 import com.example.orderservice.client.ProductClient;
-import com.example.orderservice.dto.OrderResponse;
-import com.example.orderservice.dto.ProductDto;
-import com.example.orderservice.dto.UserDto;
+import com.example.orderservice.client.PromotionClient;
+import com.example.orderservice.dto.*;
 import com.example.orderservice.entity.Order;
 import com.example.orderservice.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +34,9 @@ class OrderServiceTest {
     @Mock
     private ProductClient productClient;
 
+    @Mock
+    private PromotionClient promotionClient;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -49,6 +51,9 @@ class OrderServiceTest {
                 .buyerUsername("admin")
                 .productId(10L)
                 .quantity(2)
+                .totalPrice(200.0)
+                .discountAmount(0.0)
+                .status("CREATED")
                 .build();
 
         sampleUser = new UserDto(1L, "admin", "admin@example.com");
@@ -57,9 +62,10 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("Tạo đơn hàng mới thành công")
+    @DisplayName("Tạo đơn hàng mới không kèm voucher thành công")
     void createOrder_Success() {
         // Given
+        when(productClient.getProductById(10L)).thenReturn(sampleProduct);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
             Order orderToSave = invocation.getArgument(0);
             return Order.builder()
@@ -67,6 +73,9 @@ class OrderServiceTest {
                     .buyerUsername(orderToSave.getBuyerUsername())
                     .productId(orderToSave.getProductId())
                     .quantity(orderToSave.getQuantity())
+                    .totalPrice(orderToSave.getTotalPrice())
+                    .discountAmount(orderToSave.getDiscountAmount())
+                    .status("CREATED")
                     .build();
         });
 
@@ -79,8 +88,83 @@ class OrderServiceTest {
         assertEquals("admin", createdOrder.getBuyerUsername());
         assertEquals(10L, createdOrder.getProductId());
         assertEquals(2, createdOrder.getQuantity());
+        assertEquals(200.0, createdOrder.getTotalPrice());
 
         verify(orderRepository, times(1)).save(any(Order.class));
+        verifyNoInteractions(promotionClient);
+    }
+
+    @Test
+    @DisplayName("Tạo đơn hàng kèm voucher hợp lệ: tính giảm giá và gọi consumePromotion")
+    void createOrder_WithValidPromotion_AppliesDiscountAndConsumesVoucher() {
+        // Given
+        when(productClient.getProductById(10L)).thenReturn(sampleProduct);
+
+        ApplyPromotionResponse promoResponse = ApplyPromotionResponse.builder()
+                .valid(true)
+                .promotionCode("SALE20")
+                .discountType("PERCENTAGE")
+                .discountAmount(BigDecimal.valueOf(40.0)) // 200 * 20% = 40
+                .finalTotal(BigDecimal.valueOf(160.0))
+                .build();
+
+        when(promotionClient.applyPromotion(any(ApplyPromotionRequest.class), eq("admin"))).thenReturn(promoResponse);
+
+        when(orderRepository.save(any(Order.class))).thenAnswer(inv -> {
+            Order o = inv.getArgument(0);
+            return Order.builder()
+                    .id(50L)
+                    .buyerUsername(o.getBuyerUsername())
+                    .productId(o.getProductId())
+                    .quantity(o.getQuantity())
+                    .promotionCode(o.getPromotionCode())
+                    .discountAmount(o.getDiscountAmount())
+                    .totalPrice(o.getTotalPrice())
+                    .status("CREATED")
+                    .build();
+        });
+
+        // When
+        Order createdOrder = orderService.createOrder("admin", 10L, 2, "SALE20");
+
+        // Then
+        assertNotNull(createdOrder);
+        assertEquals(50L, createdOrder.getId());
+        assertEquals("SALE20", createdOrder.getPromotionCode());
+        assertEquals(40.0, createdOrder.getDiscountAmount());
+        assertEquals(160.0, createdOrder.getTotalPrice());
+
+        verify(promotionClient, times(1)).applyPromotion(any(ApplyPromotionRequest.class), eq("admin"));
+        verify(promotionClient, times(1)).consumePromotion(any(ConsumePromotionRequest.class), eq("admin"));
+        verify(orderRepository, times(1)).save(any(Order.class));
+    }
+
+    @Test
+    @DisplayName("Hủy đơn hàng có voucher: gọi hoàn lại voucher (refundPromotion) thành công")
+    void cancelOrder_WithPromotion_RefundsVoucher() {
+        // Given
+        Order orderWithPromo = Order.builder()
+                .id(99L)
+                .buyerUsername("john")
+                .productId(10L)
+                .quantity(1)
+                .promotionCode("SALE20")
+                .discountAmount(20.0)
+                .totalPrice(80.0)
+                .status("CREATED")
+                .build();
+
+        when(orderRepository.findById(99L)).thenReturn(Optional.of(orderWithPromo));
+        when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // When
+        Order cancelledOrder = orderService.cancelOrder(99L);
+
+        // Then
+        assertNotNull(cancelledOrder);
+        assertEquals("CANCELLED", cancelledOrder.getStatus());
+        verify(promotionClient, times(1)).refundPromotion(any(RefundPromotionRequest.class), eq("john"));
+        verify(orderRepository, times(1)).save(orderWithPromo);
     }
 
     @Test

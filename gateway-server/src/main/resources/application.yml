@@ -14,6 +14,8 @@ security:
       methods: GET,POST
     - path: /api/products/**
       methods: GET
+    - path: /api/promotions/**
+      methods: GET
     - path: /actuator/**
       methods: GET
 
@@ -42,6 +44,10 @@ zuul:
     order-service:
       path: /api/orders/**
       service-id: order-service
+      strip-prefix: false
+    promotion-service:
+      path: /api/promotions/**
+      service-id: promotion-service
       strip-prefix: false
 
 ribbon:
