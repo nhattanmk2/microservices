@@ -36,7 +36,7 @@ class JwtUtilsTest {
 
     @Test
     @DisplayName("Validate token hợp lệ thành công")
-    void validateToken_Success() {
+    void validate_Success() {
         String token = createToken("admin_user", 60000);
         assertTrue(jwtUtils.validateToken(token));
         assertEquals("admin_user", jwtUtils.getUsernameFromToken(token));
@@ -44,20 +44,20 @@ class JwtUtilsTest {
 
     @Test
     @DisplayName("Validate token hết hạn trả về false")
-    void validateToken_Expired() {
+    void validate_Expired() {
         String expiredToken = createToken("expired_user", -1000);
         assertFalse(jwtUtils.validateToken(expiredToken));
     }
 
     @Test
     @DisplayName("Validate token sai chữ ký hoặc format hỏng trả về false")
-    void validateToken_Malformed() {
+    void validate_Malformed() {
         assertFalse(jwtUtils.validateToken("header.payload.signature_fake"));
     }
 
     @Test
     @DisplayName("Trích xuất role từ token thành công")
-    void getRoleFromToken_Success() {
+    void getRole_Success() {
         String token = Jwts.builder()
                 .setSubject("manager")
                 .claim("role", "ADMIN")

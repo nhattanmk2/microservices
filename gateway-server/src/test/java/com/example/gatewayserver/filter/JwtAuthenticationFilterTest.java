@@ -58,7 +58,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Endpoint trong Whitelist (/api/auth/login) được bỏ qua filter")
-    void shouldFilter_Whitelist_ReturnsFalse() {
+    void shouldFilter_Whitelist_False() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
         RequestContext.getCurrentContext().setRequest(request);
 
@@ -67,7 +67,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("GET /api/products thuộc Whitelist được bỏ qua filter")
-    void shouldFilter_ProductGet_ReturnsFalse() {
+    void shouldFilter_ProductGet_False() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/products");
         RequestContext.getCurrentContext().setRequest(request);
 
@@ -76,7 +76,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("POST /api/products không thuộc Whitelist phải qua filter")
-    void shouldFilter_ProductPost_ReturnsTrue() {
+    void shouldFilter_ProductPost_True() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/products");
         RequestContext.getCurrentContext().setRequest(request);
 
@@ -85,7 +85,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Request cần xác thực nhưng thiếu header Authorization sẽ bị chặn với mã 401")
-    void run_MissingAuthorizationHeader_RejectsWith401() {
+    void run_MissingAuth_Rejects401() {
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/products");
         MockHttpServletResponse response = new MockHttpServletResponse();
         RequestContext.getCurrentContext().setRequest(request);
@@ -99,7 +99,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Request kèm token hợp lệ sẽ được chuyển tiếp và đính kèm header X-Auth-Username")
-    void run_ValidToken_PropagatesUsernameHeader() {
+    void run_ValidToken_PropagatesUser() {
         String token = "valid.jwt.token";
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/products");
         request.addHeader("Authorization", "Bearer " + token);
@@ -119,7 +119,7 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @DisplayName("Request kèm token có role ADMIN sẽ chuyển tiếp cả header X-Auth-Username và X-Auth-Role")
-    void run_ValidTokenWithRole_PropagatesRoleHeader() {
+    void run_ValidToken_PropagatesRole() {
         String token = "valid.admin.jwt.token";
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/promotions");
         request.addHeader("Authorization", "Bearer " + token);

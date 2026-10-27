@@ -25,7 +25,7 @@ public class ProductService {
         this.restTemplate = restTemplate;
     }
 
-    public String checkAuthServiceStatus() {
+    public String checkAuthStatus() {
         try {
             String response = authClient.getAuthStatus();
             return "Phản hồi từ Auth Service (thông qua Feign): " + response;

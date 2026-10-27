@@ -13,7 +13,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(PromotionException.class)
-    public ResponseEntity<Map<String, Object>> handlePromotionException(PromotionException ex) {
+    public ResponseEntity<Map<String, Object>> handlePromotion(PromotionException ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", ex.getStatus().value());
@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());

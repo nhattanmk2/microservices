@@ -45,9 +45,9 @@ public class PromotionService {
         Promotion promotion = promotionRepository.findByCodeIgnoreCase(request.getPromotionCode().trim())
                 .orElseThrow(() -> new PromotionException("Khong tim thay ma khuyen mai: " + request.getPromotionCode()));
 
-        validatePromotionEligibility(promotion, request.getBuyerUsername(), request.getOrderTotal());
+        validateEligibility(promotion, request.getBuyerUsername(), request.getOrderTotal());
 
-        BigDecimal applicableAmount = calculateApplicableAmount(promotion, request);
+        BigDecimal applicableAmount = calculateBaseAmount(promotion, request);
         BigDecimal discountAmount = calculateDiscount(promotion, applicableAmount, request.getOrderTotal());
         BigDecimal finalTotal = request.getOrderTotal().subtract(discountAmount);
         if (finalTotal.compareTo(BigDecimal.ZERO) < 0) {
@@ -103,7 +103,7 @@ public class PromotionService {
             throw new PromotionException("Thong tin hoan voucher khong hop le");
         }
 
-        PromotionUsage usage = promotionUsageRepository.findByOrderIdAndPromotionCodeAndStatus(
+        PromotionUsage usage = promotionUsageRepository.findByOrderAndCode(
                 request.getOrderId(), request.getPromotionCode().trim().toUpperCase(), "USED")
                 .orElseThrow(() -> new PromotionException("Khong tim thay luot su dung voucher hop le de hoan lai"));
 
@@ -190,7 +190,7 @@ public class PromotionService {
 
     public List<PromotionResponseDto> getActivePromotions() {
         LocalDateTime now = LocalDateTime.now();
-        List<Promotion> promotions = promotionRepository.findByIsActiveTrueAndStartDateBeforeAndEndDateAfter(now, now);
+        List<Promotion> promotions = promotionRepository.findActive(now, now);
         return promotions.stream().map(p -> {
             List<Long> productIds = promotionProductRepository.findByPromotionId(p.getId())
                     .stream().map(PromotionProduct::getProductId).collect(Collectors.toList());
@@ -211,14 +211,14 @@ public class PromotionService {
         return mapToDto(promotion, productIds);
     }
 
-    public List<PromotionResponseDto> getPromotionsForProduct(Long productId) {
+    public List<PromotionResponseDto> getForProduct(Long productId) {
         LocalDateTime now = LocalDateTime.now();
-        List<Promotion> activePromos = promotionRepository.findByIsActiveTrueAndStartDateBeforeAndEndDateAfter(now, now);
+        List<Promotion> activePromos = promotionRepository.findActive(now, now);
 
         List<PromotionResponseDto> result = new ArrayList<>();
         for (Promotion promo : activePromos) {
             boolean hasProductRestrictions = promotionProductRepository.existsByPromotionId(promo.getId());
-            if (!hasProductRestrictions || promotionProductRepository.existsByPromotionIdAndProductId(promo.getId(), productId)) {
+            if (!hasProductRestrictions || promotionProductRepository.existsByProduct(promo.getId(), productId)) {
                 List<Long> pids = promotionProductRepository.findByPromotionId(promo.getId())
                         .stream().map(PromotionProduct::getProductId).collect(Collectors.toList());
                 result.add(mapToDto(promo, pids));
@@ -227,7 +227,7 @@ public class PromotionService {
         return result;
     }
 
-    private void validatePromotionEligibility(Promotion promotion, String username, BigDecimal orderTotal) {
+    private void validateEligibility(Promotion promotion, String username, BigDecimal orderTotal) {
         if (!Boolean.TRUE.equals(promotion.getIsActive())) {
             throw new PromotionException("Ma khuyen mai hien khong hoat dong");
         }
@@ -245,7 +245,7 @@ public class PromotionService {
         }
 
         if (StringUtils.hasText(username)) {
-            long usedCountByUser = promotionUsageRepository.countByPromotionIdAndBuyerUsernameAndStatus(
+            long usedCountByUser = promotionUsageRepository.countUsage(
                     promotion.getId(), username, "USED");
             if (usedCountByUser >= promotion.getLimitPerUser()) {
                 throw new PromotionException(String.format("Ban da su dung het gioi han (%d lan) cho ma khuyen mai nay",
@@ -261,7 +261,7 @@ public class PromotionService {
         }
     }
 
-    private BigDecimal calculateApplicableAmount(Promotion promotion, ApplyPromotionRequest request) {
+    private BigDecimal calculateBaseAmount(Promotion promotion, ApplyPromotionRequest request) {
         boolean hasRestrictions = promotionProductRepository.existsByPromotionId(promotion.getId());
         if (!hasRestrictions) {
             return request.getOrderTotal() != null ? request.getOrderTotal() : BigDecimal.ZERO;
@@ -274,7 +274,7 @@ public class PromotionService {
         BigDecimal eligibleTotal = BigDecimal.ZERO;
         for (OrderItemDto item : request.getItems()) {
             if (item.getProductId() != null &&
-                    promotionProductRepository.existsByPromotionIdAndProductId(promotion.getId(), item.getProductId())) {
+                    promotionProductRepository.existsByProduct(promotion.getId(), item.getProductId())) {
                 BigDecimal itemTotal = item.getUnitPrice() != null && item.getQuantity() != null
                         ? item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
                         : BigDecimal.ZERO;

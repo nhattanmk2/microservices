@@ -94,7 +94,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("Lấy thông tin User theo username thành công")
-    void getUserByUsername_Success() {
+    void getUser_Success() {
         // Given
         User user = User.builder()
                 .id(10L)
@@ -118,7 +118,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("Ném ngoại lệ khi đăng ký với username đã tồn tại")
-    void register_UsernameAlreadyExists_ShouldThrowException() {
+    void register_UserExists_Throws() {
         // Given
         RegisterRequest request = new RegisterRequest("existingUser", "password", "exist@example.com");
         User existingUser = User.builder().id(1L).username("existingUser").build();
@@ -135,7 +135,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("Ném ngoại lệ BadCredentialsException khi sai mật khẩu")
-    void login_BadCredentials_ShouldThrowException() {
+    void login_BadCredentials_Throws() {
         // Given
         LoginRequest request = new LoginRequest("john", "wrongPassword");
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -150,7 +150,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("Ném ngoại lệ khi không tìm thấy user theo username")
-    void getUserByUsername_NotFound_ShouldThrowException() {
+    void getUser_NotFound_Throws() {
         // Given
         when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
 

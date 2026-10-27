@@ -20,7 +20,7 @@ public class ProductController {
 
     @GetMapping("/check-auth")
     public ResponseEntity<String> checkAuth() {
-        String result = productService.checkAuthServiceStatus();
+        String result = productService.checkAuthStatus();
         return ResponseEntity.ok(result);
     }
 

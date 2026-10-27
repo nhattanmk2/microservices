@@ -46,7 +46,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void getAllProducts_ShouldReturnListOfDTOs() {
+    void getAllProducts_ReturnsDTOs() {
         when(productRepository.findAll()).thenReturn(Collections.singletonList(sampleProduct));
 
         List<ProductDTO> result = productService.getAllProducts();
@@ -57,7 +57,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void createProduct_ShouldSetDefaultStockAndReturnDTO() {
+    void createProduct_SetsDefaultStock() {
         ProductDTO inputDto = new ProductDTO(null, "Chuột không dây", new BigDecimal("50.00"), "Chuột Logitech");
         Product savedProduct = Product.builder()
                 .id(2L)
@@ -78,20 +78,20 @@ class ProductServiceTest {
     }
 
     @Test
-    void checkAuthServiceStatus_Success_ShouldReturnString() {
+    void checkAuthStatus_Success() {
         when(authClient.getAuthStatus()).thenReturn("Auth Service is healthy");
 
-        String result = productService.checkAuthServiceStatus();
+        String result = productService.checkAuthStatus();
 
         assertEquals("Phản hồi từ Auth Service (thông qua Feign): Auth Service is healthy", result);
         verify(authClient, times(1)).getAuthStatus();
     }
 
     @Test
-    void checkAuthServiceStatus_Fail_ShouldReturnErrorMessage() {
+    void checkAuthStatus_Fail() {
         when(authClient.getAuthStatus()).thenThrow(new RuntimeException("Connection Refused"));
 
-        String result = productService.checkAuthServiceStatus();
+        String result = productService.checkAuthStatus();
 
         assertEquals("Lỗi! Không thể kết nối tới Auth Service. Chi tiết: Connection Refused", result);
         verify(authClient, times(1)).getAuthStatus();

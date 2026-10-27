@@ -96,7 +96,7 @@ class OrderServiceTest {
 
     @Test
     @DisplayName("Tạo đơn hàng kèm voucher hợp lệ: tính giảm giá và gọi consumePromotion")
-    void createOrder_WithValidPromotion_AppliesDiscountAndConsumesVoucher() {
+    void createOrder_ValidPromo_Success() {
         // Given
         when(productClient.getProductById(10L)).thenReturn(sampleProduct);
 
@@ -141,7 +141,7 @@ class OrderServiceTest {
 
     @Test
     @DisplayName("Hủy đơn hàng có voucher: gọi hoàn lại voucher (refundPromotion) thành công")
-    void cancelOrder_WithPromotion_RefundsVoucher() {
+    void cancelOrder_WithPromo_Refunds() {
         // Given
         Order orderWithPromo = Order.builder()
                 .id(99L)
@@ -169,7 +169,7 @@ class OrderServiceTest {
 
     @Test
     @DisplayName("Lấy chi tiết đơn hàng - tổng hợp dữ liệu từ AuthClient và ProductClient")
-    void getOrderDetails_Success() {
+    void getOrder_Success() {
         // Given
         when(orderRepository.findById(1L)).thenReturn(Optional.of(sampleOrder));
         when(authClient.getUserByUsername("admin")).thenReturn(sampleUser);
@@ -199,7 +199,7 @@ class OrderServiceTest {
 
     @Test
     @DisplayName("Ném ngoại lệ khi không tìm thấy đơn hàng")
-    void getOrderDetails_OrderNotFound_ShouldThrowException() {
+    void getOrder_NotFound_Throws() {
         // Given
         when(orderRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -214,7 +214,7 @@ class OrderServiceTest {
 
     @Test
     @DisplayName("Xử lý ngoại lệ khi gọi Auth-Service thất bại")
-    void getOrderDetails_AuthServiceFails_ShouldThrowException() {
+    void getOrder_AuthFail_Throws() {
         // Given
         when(orderRepository.findById(1L)).thenReturn(Optional.of(sampleOrder));
         when(authClient.getUserByUsername("admin")).thenThrow(new RuntimeException("Connection refused from Auth-Service"));
@@ -230,7 +230,7 @@ class OrderServiceTest {
 
     @Test
     @DisplayName("Xử lý ngoại lệ khi Product-Service bị timeout")
-    void getOrderDetails_ProductServiceFails_ShouldThrowException() {
+    void getOrder_ProductFail_Throws() {
         // Given
         when(orderRepository.findById(1L)).thenReturn(Optional.of(sampleOrder));
         when(authClient.getUserByUsername("admin")).thenReturn(sampleUser);

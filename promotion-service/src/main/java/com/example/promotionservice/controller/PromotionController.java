@@ -29,8 +29,8 @@ public class PromotionController {
     }
 
     @GetMapping("/product/{productId}")
-    public ResponseEntity<List<PromotionResponseDto>> getPromotionsForProduct(@PathVariable("productId") Long productId) {
-        return ResponseEntity.ok(promotionService.getPromotionsForProduct(productId));
+    public ResponseEntity<List<PromotionResponseDto>> getForProduct(@PathVariable("productId") Long productId) {
+        return ResponseEntity.ok(promotionService.getForProduct(productId));
     }
 
     @PostMapping("/apply")

@@ -16,7 +16,8 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
 
     Optional<Promotion> findByCodeIgnoreCase(String code);
 
-    List<Promotion> findByIsActiveTrueAndStartDateBeforeAndEndDateAfter(LocalDateTime startCheck, LocalDateTime endCheck);
+    @Query("SELECT p FROM Promotion p WHERE p.isActive = true AND p.startDate <= :startCheck AND p.endDate >= :endCheck")
+    List<Promotion> findActive(@Param("startCheck") LocalDateTime startCheck, @Param("endCheck") LocalDateTime endCheck);
 
     @Modifying
     @Query("UPDATE Promotion p SET p.usedCount = p.usedCount + 1 WHERE p.id = :id AND p.usedCount < p.usageLimit AND p.isActive = true")
