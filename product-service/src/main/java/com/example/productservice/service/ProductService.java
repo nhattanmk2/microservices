@@ -4,6 +4,8 @@ import com.example.productservice.dto.ProductDTO;
 import com.example.productservice.entity.Product;
 import com.example.productservice.repository.ProductRepository;
 import com.example.productservice.client.AuthClient;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,16 +45,19 @@ public class ProductService {
         }
     }
 
+    @Cacheable(value = "products", key = "'all'")
     public List<ProductDTO> getAllProducts() {
         return productRepository.findAll().stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "product", key = "#id")
     public Optional<ProductDTO> getProductById(Long id) {
         return productRepository.findById(id).map(this::mapToDTO);
     }
 
+    @CacheEvict(value = "products", allEntries = true)
     public ProductDTO createProduct(ProductDTO dto) {
         Product product = Product.builder()
                 .name(dto.getName())

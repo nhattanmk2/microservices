@@ -7,6 +7,7 @@ import com.example.authservice.dto.UserDto;
 import com.example.authservice.entity.User;
 import com.example.authservice.repository.UserRepository;
 import com.example.authservice.security.JwtUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -64,6 +65,7 @@ public class AuthService {
         return "User registered successfully";
     }
 
+    @Cacheable(value = "users", key = "#username")
     public UserDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));

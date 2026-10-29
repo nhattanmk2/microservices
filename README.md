@@ -50,6 +50,7 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 | **Inter-Service Client** | Spring Cloud OpenFeign | OpenFeign 3.x | Declarative REST client nội bộ |
 | **Persistence Layer** | Spring Data JPA / Hibernate | 2.7.18 | ORM & quản lý truy xuất cơ sở dữ liệu |
 | **Database** | MySQL Server | 8.0 | Hệ quản trị cơ sở dữ liệu quan hệ |
+| **Distributed Cache** | Redis | 7.0-Alpine | Cache dữ liệu sản phẩm và user, giảm tải DB & tăng tốc độ phản hồi |
 | **Security** | Spring Security & JJWT | 0.9.1 | Xác thực JWT & phân quyền truy cập (Admin/User) |
 | **Automated Testing** | JUnit 5 & Mockito | Jupiter / Mockito 4.x | Unit Testing cho Service Layer theo chuẩn BDD |
 
@@ -61,8 +62,8 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 | :--- | :---: | :--- | :--- | :--- |
 | `config-server` | **8888** | `config-server` | — | Nạp và phân phối cấu hình từ Git |
 | `eureka-server` | **8761** | `eureka-server` | — | Service Discovery Server |
-| `auth-service` | **8081** | `auth-service` | `auth_db` | Đăng ký, đăng nhập, cấp phát JWT kèm role (USER/ADMIN), tra cứu user |
-| `product-service` | **8082** | `product-service` | `product_db` | Quản lý danh mục sản phẩm, tồn kho |
+| `auth-service` | **8081** | `auth-service` | `auth_db` + Redis | Đăng ký, đăng nhập, cấp phát JWT, cache user qua Redis |
+| `product-service` | **8082** | `product-service` | `product_db` + Redis | Quản lý sản phẩm, tồn kho, cache danh mục & chi tiết sản phẩm qua Redis |
 | `order-service` | **8083** | `order-service` | In-Memory / JPA | Xử lý đơn hàng, áp dụng voucher, hủy đơn hoàn khuyến mãi |
 | `promotion-service` | **8084** | `promotion-service` | `promotion_db` | Quản lý mã voucher, kiểm tra điều kiện, tính chiết khấu & chống race condition |
 | `gateway-server` | **8080** | `gateway-server` | — | Điểm vào duy nhất cho API, reverse proxy, JWT filter & header propagation |
@@ -75,11 +76,11 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 
 - Java Development Kit (JDK) 17+
 - Apache Maven 3.8+
-- MySQL 8.0 (hoặc Docker engine)
+- MySQL 8.0 & Redis 7 (hoặc Docker engine)
 
-### Khởi tạo cơ sở dữ liệu (MySQL)
+### Khởi tạo hạ tầng (MySQL & Redis)
 
-Khởi chạy container MySQL thông qua `docker-compose.yml` có sẵn tại thư mục gốc:
+Khởi chạy container MySQL và Redis thông qua `docker-compose.yml` có sẵn tại thư mục gốc:
 
 ```bash
 docker compose up -d
