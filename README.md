@@ -91,7 +91,7 @@ docker compose up -d
 > - File `init.sql` đã được tích hợp sẵn toàn bộ cấu trúc bảng, chú thích tiếng Việt (`COMMENT`) và **1.150 bản ghi mẫu** chuẩn (100 users, 400 sản phẩm, 50 vouchers, 100 liên kết, 400 đơn hàng, 100 lịch sử dùng voucher).
 > - Nếu MySQL container đã chạy từ trước, bạn có thể nạp nhanh dữ liệu bằng lệnh:
 >   ```bash
->   docker exec -i microservices-mysql mysql -uroot -p123456 < seed-data.sql
+>   docker exec -i microservices-mysql mysql -uroot -p123456 < init.sql
 >   ```
 > - Chi tiết cấu trúc dữ liệu, các kiểu dữ liệu và ràng buộc xem tại: [DATA_DICTIONARY.md](DATA_DICTIONARY.md).
 

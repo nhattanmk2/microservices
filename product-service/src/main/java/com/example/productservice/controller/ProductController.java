@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/products")
@@ -37,7 +38,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         ProductDTO productDTO = productService.getProductById(id)
-                .orElseThrow(() -> new java.util.NoSuchElementException("Sản phẩm với ID " + id + " không tồn tại!"));
+                .orElseThrow(() -> new NoSuchElementException("Sản phẩm với ID " + id + " không tồn tại!"));
         return ResponseEntity.ok(productDTO);
     }
 

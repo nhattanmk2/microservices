@@ -11,6 +11,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -59,12 +62,12 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<java.util.List<UserDto>> getAllUsers() {
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok(authService.getAllUsers());
     }
 
     @PutMapping("/users/{id}/role")
-    public ResponseEntity<UserDto> updateUserRole(@PathVariable Long id, @RequestBody java.util.Map<String, String> payload) {
+    public ResponseEntity<UserDto> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         String role = payload.get("role");
         return ResponseEntity.ok(authService.updateUserRole(id, role));
     }
