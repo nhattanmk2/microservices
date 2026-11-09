@@ -67,6 +67,7 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 | `order-service` | **8083** | `order-service` | In-Memory / JPA | Xử lý đơn hàng, áp dụng voucher, hủy đơn hoàn khuyến mãi |
 | `promotion-service` | **8084** | `promotion-service` | `promotion_db` | Quản lý mã voucher, kiểm tra điều kiện, tính chiết khấu & chống race condition |
 | `gateway-server` | **8080** | `gateway-server` | — | Điểm vào duy nhất cho API, reverse proxy, JWT filter & header propagation |
+| `frontend` | **5173** / **3000** | `frontend` | — | Cổng giao diện người dùng (Storefront & Admin Dashboard) xây dựng bằng React + Vite |
 
 ---
 
@@ -78,7 +79,7 @@ Hệ thống backend thương mại điện tử xây dựng theo kiến trúc M
 - Apache Maven 3.8+
 - MySQL 8.0 & Redis 7 (hoặc Docker engine)
 
-### Khởi tạo hạ tầng (MySQL & Redis)
+### Khởi tạo hạ tầng (MySQL & Redis) & Dữ liệu mẫu (1.150 bản ghi)
 
 Khởi chạy container MySQL và Redis thông qua `docker-compose.yml` có sẵn tại thư mục gốc:
 
@@ -86,19 +87,38 @@ Khởi chạy container MySQL và Redis thông qua `docker-compose.yml` có sẵ
 docker compose up -d
 ```
 
-Hoặc tạo database thủ công trên MySQL instance cục bộ:
-
-```sql
-CREATE DATABASE IF NOT EXISTS auth_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE IF NOT EXISTS product_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE DATABASE IF NOT EXISTS promotion_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+> **Dữ liệu mẫu & Chú thích Cơ sở dữ liệu**:
+> - File `init.sql` đã được tích hợp sẵn toàn bộ cấu trúc bảng, chú thích tiếng Việt (`COMMENT`) và **1.150 bản ghi mẫu** chuẩn (100 users, 400 sản phẩm, 50 vouchers, 100 liên kết, 400 đơn hàng, 100 lịch sử dùng voucher).
+> - Nếu MySQL container đã chạy từ trước, bạn có thể nạp nhanh dữ liệu bằng lệnh:
+>   ```bash
+>   docker exec -i microservices-mysql mysql -uroot -p123456 < seed-data.sql
+>   ```
+> - Chi tiết cấu trúc dữ liệu, các kiểu dữ liệu và ràng buộc xem tại: [DATA_DICTIONARY.md](DATA_DICTIONARY.md).
 
 ---
 
 ## 5. Startup Sequence & Execution Guide
 
-Do có sự phụ thuộc về cấu hình và service registry, các service cần được khởi động theo thứ tự sau:
+### 5.1. Khởi động 1-Click tự động (Khuyên dùng)
+
+Dự án cung cấp sẵn script tự động kiểm tra hạ tầng và khởi động tuần tự toàn bộ các service theo đúng 4 giai đoạn phụ thuộc:
+
+* **Trên Windows Terminal / PowerShell**:
+  ```powershell
+  .\start-all.ps1
+  ```
+* **Hoặc click đúp file**: [`start-all.bat`](start-all.bat)
+* **Để dừng toàn bộ hệ thống**:
+  ```powershell
+  .\stop-all.ps1
+  # hoặc click đúp file stop-all.bat
+  ```
+
+---
+
+### 5.2. Khởi động thủ công theo thứ tự từng giai đoạn
+
+Do có sự phụ thuộc về cấu hình và service registry, nếu chạy thủ công các service cần được khởi động theo thứ tự sau:
 
 1. **Phase 1: Core Infrastructure**
    - `config-server` (`ConfigServerApplication.java` - Port **8888**): Chờ nạp Git repo thành công.
@@ -112,6 +132,19 @@ Do có sự phụ thuộc về cấu hình và service registry, các service c�
 
 3. **Phase 3: Edge Routing**
    - `gateway-server` (`GatewayServerApplication.java` - Port **8080**): Chờ 15–30 giây để Zuul hoàn tất chu kỳ fetch registry định kỳ từ Eureka.
+
+4. **Phase 4: Frontend Web Portal**
+   - Khởi chạy môi trường phát triển (Dev server):
+     ```bash
+     cd frontend
+     npm run dev
+     ```
+     Mở trình duyệt truy cập: `http://localhost:5173`
+   - Hoặc khởi chạy thông qua Docker Compose (Production build):
+     ```bash
+     docker compose up -d frontend
+     ```
+     Mở trình duyệt truy cập: `http://localhost:3000`
 
 > **IntelliJ Services Dashboard**: Có thể gộp toàn bộ các Application vào tool window **Services** (`Alt + 8` hoặc `View -> Tool Windows -> Services`) để quản lý lifecycle tập trung.
 
@@ -163,6 +196,7 @@ Toàn bộ request từ client được gửi qua Gateway tại `http://localhos
 | Method | Endpoint | Query / Path Params | Description |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/orders` | `productId`, `quantity`, `promotionCode` (optional) | Tạo đơn hàng mới, tự động tính chiết khấu và consume voucher |
+| `GET` | `/api/orders/my-orders` | Header: `X-Auth-Username` | Lấy danh sách lịch sử đơn hàng của người dùng hiện tại |
 | `GET` | `/api/orders/{id}` | `id` (Order ID) | Lấy chi tiết đơn hàng (tổng hợp dữ liệu qua Feign kèm thông tin chiết khấu) |
 | `POST` | `/api/orders/{id}/cancel` | `id` (Order ID) | Hủy đơn hàng và tự động hoàn lại lượt sử dụng voucher (Refund Promotion) |
 

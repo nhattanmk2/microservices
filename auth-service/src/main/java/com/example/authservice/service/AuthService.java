@@ -69,7 +69,39 @@ public class AuthService {
     public UserDto getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return new UserDto(user.getId(), user.getUsername(), user.getEmail());
+        return new UserDto(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole() != null ? user.getRole() : "USER",
+                user.getCreatedAt() != null ? user.getCreatedAt().toString() : null
+        );
+    }
+
+    public java.util.List<UserDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> new UserDto(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getRole() != null ? user.getRole() : "USER",
+                        user.getCreatedAt() != null ? user.getCreatedAt().toString() : null
+                ))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public UserDto updateUserRole(Long id, String role) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + id));
+        user.setRole(role != null ? role.trim().toUpperCase() : "USER");
+        User saved = userRepository.save(user);
+        return new UserDto(
+                saved.getId(),
+                saved.getUsername(),
+                saved.getEmail(),
+                saved.getRole(),
+                saved.getCreatedAt() != null ? saved.getCreatedAt().toString() : null
+        );
     }
 }
 

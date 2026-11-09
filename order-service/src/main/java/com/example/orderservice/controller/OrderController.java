@@ -5,6 +5,7 @@ import com.example.orderservice.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.orderservice.entity.Order;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -14,6 +15,28 @@ public class OrderController {
 
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Order>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
+    @GetMapping("/my-orders")
+    public ResponseEntity<List<Order>> getMyOrders(
+            @RequestHeader(value = "X-Auth-Username", required = false) String headerUsername,
+            @RequestParam(value = "username", required = false) String paramUsername) {
+        String buyerUsername = org.springframework.util.StringUtils.hasText(headerUsername) ? headerUsername : paramUsername;
+        if (!org.springframework.util.StringUtils.hasText(buyerUsername)) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(orderService.getMyOrders(buyerUsername));
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestBody java.util.Map<String, String> payload) {
+        String status = payload.get("status");
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
 
     @GetMapping("/{id}")

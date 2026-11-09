@@ -5,7 +5,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration
+// @Configuration - CORS is centrally handled by gateway-server
 public class CorsConfig implements WebMvcConfigurer {
 
     @Override

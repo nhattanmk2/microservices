@@ -46,6 +46,16 @@ public class ProductController {
         ProductDTO created = productService.createProduct(productDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+
+    @PutMapping("/{id}/reduce-stock")
+    public ResponseEntity<ProductDTO> reduceStock(@PathVariable Long id, @RequestParam("quantity") int quantity) {
+        ProductDTO updated = productService.reduceStock(id, quantity);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/{id}/restore-stock")
+    public ResponseEntity<ProductDTO> restoreStock(@PathVariable Long id, @RequestParam("quantity") int quantity) {
+        ProductDTO updated = productService.restoreStock(id, quantity);
+        return ResponseEntity.ok(updated);
+    }
 }
-
-

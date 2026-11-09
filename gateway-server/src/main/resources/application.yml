@@ -6,16 +6,16 @@ spring:
     name: gateway-server
 
 jwt:
-  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  secret: ${JWT_SECRET:c3VwZXItc2VjcmV0LWtleS10aGF0LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHM=}
 
 security:
   whitelist:
     - path: /api/auth/**
-      methods: GET,POST
+      methods: GET,POST,PUT
     - path: /api/products/**
-      methods: GET
+      methods: GET,POST,PUT,DELETE
     - path: /api/promotions/**
-      methods: GET
+      methods: GET,POST,PUT,DELETE
     - path: /actuator/**
       methods: GET
 
@@ -32,6 +32,7 @@ eureka:
 zuul:
   ignored-services: '*'
   sensitive-headers: Cookie,Set-Cookie
+  ignored-headers: Access-Control-Allow-Credentials, Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Max-Age, Access-Control-Allow-Headers, Access-Control-Expose-Headers
   routes:
     auth-service:
       path: /api/auth/**

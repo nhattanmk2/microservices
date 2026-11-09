@@ -57,4 +57,15 @@ public class AuthController {
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
         return ResponseEntity.ok(authService.getUserByUsername(username));
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<java.util.List<UserDto>> getAllUsers() {
+        return ResponseEntity.ok(authService.getAllUsers());
+    }
+
+    @PutMapping("/users/{id}/role")
+    public ResponseEntity<UserDto> updateUserRole(@PathVariable Long id, @RequestBody java.util.Map<String, String> payload) {
+        String role = payload.get("role");
+        return ResponseEntity.ok(authService.updateUserRole(id, role));
+    }
 }

@@ -52,6 +52,11 @@ public class JwtAuthenticationFilter extends ZuulFilter {
         String requestUri = request.getRequestURI();
         String method = request.getMethod();
 
+        // Always bypass HTTP OPTIONS pre-flight requests for CORS
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return false;
+        }
+
         // Check if request matches any whitelist rule
         if (securityProperties.getWhitelist() != null) {
             for (SecurityProperties.WhitelistRule rule : securityProperties.getWhitelist()) {

@@ -7,8 +7,10 @@ import com.example.productservice.client.AuthClient;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,14 +59,40 @@ public class ProductService {
         return productRepository.findById(id).map(this::mapToDTO);
     }
 
-    @CacheEvict(value = "products", allEntries = true)
+    @CacheEvict(value = {"products", "product"}, allEntries = true)
     public ProductDTO createProduct(ProductDTO dto) {
+        int initialStock = dto.getStock() != null ? dto.getStock() : (dto.getInventory() != null ? dto.getInventory() : 100);
         Product product = Product.builder()
                 .name(dto.getName())
                 .price(dto.getPrice())
                 .description(dto.getDescription())
-                .stock(100)
+                .stock(initialStock)
                 .build();
+        Product saved = productRepository.save(product);
+        return mapToDTO(saved);
+    }
+
+    @Transactional
+    @CacheEvict(value = {"products", "product"}, allEntries = true)
+    public ProductDTO reduceStock(Long id, int quantity) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Sản phẩm #" + id + " không tồn tại!"));
+        int currentStock = product.getStock() != null ? product.getStock() : 0;
+        if (currentStock < quantity) {
+            throw new IllegalStateException("Sản phẩm '" + product.getName() + "' không đủ số lượng trong kho (Hiện còn: " + currentStock + ", yêu cầu: " + quantity + ")");
+        }
+        product.setStock(currentStock - quantity);
+        Product saved = productRepository.save(product);
+        return mapToDTO(saved);
+    }
+
+    @Transactional
+    @CacheEvict(value = {"products", "product"}, allEntries = true)
+    public ProductDTO restoreStock(Long id, int quantity) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Sản phẩm #" + id + " không tồn tại!"));
+        int currentStock = product.getStock() != null ? product.getStock() : 0;
+        product.setStock(currentStock + quantity);
         Product saved = productRepository.save(product);
         return mapToDTO(saved);
     }
@@ -74,8 +102,8 @@ public class ProductService {
                 product.getId(),
                 product.getName(),
                 product.getPrice(),
-                product.getDescription()
+                product.getDescription(),
+                product.getStock() != null ? product.getStock() : 0
         );
     }
 }
-

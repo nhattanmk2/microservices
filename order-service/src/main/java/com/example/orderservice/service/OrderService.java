@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
 
 @Service
 @SuppressWarnings("null")
@@ -35,6 +36,18 @@ public class OrderService {
 
     public Order createOrder(String buyerUsername, Long productId, int quantity, String promotionCode) {
         ProductDto product = productClient.getProductById(productId);
+        if (product == null) {
+            throw new RuntimeException("Sản phẩm #" + productId + " không tồn tại!");
+        }
+
+        // Kiểm tra tồn kho trước khi đặt hàng
+        if (product.getStock() != null && product.getStock() < quantity) {
+            throw new IllegalStateException("Sản phẩm '" + product.getName() + "' không đủ số lượng trong kho! (Tồn kho hiện tại: " + product.getStock() + ", yêu cầu: " + quantity + ")");
+        }
+
+        // Trừ tồn kho sản phẩm trong product-service
+        productClient.reduceStock(productId, quantity);
+
         double originalPrice = product.getPrice().doubleValue() * quantity;
         double discountAmount = 0.0;
         double finalPrice = originalPrice;
@@ -100,6 +113,13 @@ public class OrderService {
             return order;
         }
 
+        // Hoàn lại số lượng tồn kho cho product-service
+        try {
+            productClient.restoreStock(order.getProductId(), order.getQuantity());
+        } catch (Exception e) {
+            System.err.println("Lỗi hoàn trả tồn kho sản phẩm #" + order.getProductId() + ": " + e.getMessage());
+        }
+
         // Hoàn lại lượt sử dụng voucher nếu đơn hàng có áp dụng
         if (StringUtils.hasText(order.getPromotionCode())) {
             RefundPromotionRequest refundRequest = RefundPromotionRequest.builder()
@@ -112,6 +132,26 @@ public class OrderService {
         }
 
         order.setStatus("CANCELLED");
+        return orderRepository.save(order);
+    }
+
+    public List<Order> getMyOrders(String buyerUsername) {
+        return orderRepository.findByBuyerUsernameOrderByIdDesc(buyerUsername);
+    }
+
+    public List<Order> getAllOrders() {
+        return orderRepository.findAllByOrderByIdDesc();
+    }
+
+    public Order updateOrderStatus(Long orderId, String newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng #" + orderId));
+
+        if ("CANCELLED".equalsIgnoreCase(newStatus) && !"CANCELLED".equalsIgnoreCase(order.getStatus())) {
+            return cancelOrder(orderId);
+        }
+
+        order.setStatus(newStatus != null ? newStatus.toUpperCase() : "CREATED");
         return orderRepository.save(order);
     }
 
