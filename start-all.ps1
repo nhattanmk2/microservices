@@ -30,7 +30,7 @@ function Start-ServiceWindow {
         [string]$Path
     )
     Write-Host " -> Dang mo tien trinh $ServiceName (Port $Port)..." -ForegroundColor Cyan
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$Host.UI.RawUI.WindowTitle = '$ServiceName ($Port)'; cd '$Path'; Write-Host '=========================================' -ForegroundColor Green; Write-Host '  DANG CHAY $ServiceName TRAPORT $Port  ' -ForegroundColor Green; Write-Host '=========================================' -ForegroundColor Green; mvn spring-boot:run"
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$Host.UI.RawUI.WindowTitle = '$ServiceName ($Port)'; cd '$Path'; Write-Host '=========================================' -ForegroundColor Green; Write-Host '  DANG CHAY $ServiceName TRAPORT $Port  ' -ForegroundColor Green; Write-Host '=========================================' -ForegroundColor Green; mvn spring-boot:run -Dspring-boot.run.jvmArguments='-Xms128m -Xmx256m'"
 }
 
 # Ham kiem tra port den khi san sang

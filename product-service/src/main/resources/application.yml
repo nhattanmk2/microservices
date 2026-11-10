@@ -19,7 +19,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
   redis:
-    host: ${REDIS_HOST:localhost}
+    host: ${REDIS_HOST:127.0.0.1}
     port: ${REDIS_PORT:6379}
   cache:
     type: redis
